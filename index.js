@@ -138,17 +138,6 @@ class Pathfinder {
                         this.changeNormalSquare(square);
                     }
                 }
-                square.div.onmouseup = () => {
-                    // A mouse up event has occured while the cursor is ontop of the given
-                    // square
-                    this.mousedown = false;
-                    if (this.currentPressedSquare == "start") {
-                        this.start = square;
-                    } else if (this.currentPressedSquare == "target") {
-                        this.target = sqaure;
-                    }
-                    this.currentPressedSquare = "normal";
-                }
                 square.div.onmouseenter = () => {
                     // The cursor has entered the given square and it may be either "mousedown"
                     // or "mouseup" as denoted by 'this.mousedown'
@@ -162,9 +151,20 @@ class Pathfinder {
                 square.div.onmouseleave = () => {
                     // The cursor has entered the given square and it may be either "mousedown"
                     // or "mouseup" as denoted by 'this.mousedown'
-                    if (this.mousedown && board.currentPressedSquare != "normal") {
-                        this.changeSpecialSquare(square);
+                    //if (this.mousedown && board.currentPressedSquare != "normal") {
+                    //    this.changeSpecialSquare(square);
+                    //}
+                }
+                square.div.onmouseup = () => {
+                    // A mouse up event has occured while the cursor is ontop of the given
+                    // square
+                    this.mousedown = false;
+                    if (this.currentPressedSquare == "start") {
+                        this.start = square;
+                    } else if (this.currentPressedSquare == "target") {
+                        this.target = square;
                     }
+                    this.currentPressedSquare = "normal";
                 }
             }
         }
@@ -175,13 +175,16 @@ class Pathfinder {
         // default positions on the board.
         this.boardL[10][10].div.className = "start";
         this.boardL[10][10].start = true;
+        this.start = this.boardL[10][10];
         this.boardL[10][40].div.className = "target";
         this.boardL[10][40].target = true;
+        this.target = this.boardL[10][40];
     }
 
     changeNormalSquare(square){
         // This function converts the wall or weight property of a given square to
         // normal properties, and vice versa.
+        if (square.start || square.target) return;
 
         if (this.algoType == "wall"){
             if (square.wall) {
@@ -207,7 +210,40 @@ class Pathfinder {
     }
 
     changeSpecialSquare(square){
-        return 1;
+        // This function adjusts the position of special squares such as "start" and "target"
+        if (this.currentPressedSquare == "start") {
+            // We are adjusting the position of the starting sqaure.
+            // The start node will replace an existing squares other than the target
+            if (square.target) return;
+
+            // reset the old square
+            this.start.start = false;
+            this.start.div.className = "normal";
+
+            // update the new square
+            square.start = true;
+            square.wall = false;
+            square.weight = false;
+            square.div.className = "start";
+            this.start = square;
+
+        } else {
+            // we are adjusting the position of the target node
+            // The start node will replace an existing squares other than the target
+            if (square.start) return;
+
+            // reset the old square
+            this.target.start = false;
+            this.target.div.className = "normal";
+
+            // update the new square
+            square.target = true;
+            square.wall = false;
+            square.weight = false;
+            square.div.className = "target";
+            this.target = square;
+
+        }
     }
 
     clearBoard(){
@@ -232,9 +268,8 @@ class Pathfinder {
         // into the function, this function may change all wall squares to weighted
         // squares or visa versa
         this.algorithm = algorithm;
-        console.log(algorithm)
 
-        if (algorithm == "BreathFirstSearch" || algorithm == "DepthFirstSearch") {
+        if (algorithm == "BreadthFirstSearch" || algorithm == "DepthFirstSearch") {
             this.algoType = "wall";
 
             // For each row in the board
@@ -285,6 +320,11 @@ window.addEventListener('load', function() {
         lightBlue: "rgba(0, 153, 255)"
     };
     
+    const djikstras = "Djikstra's Algorithm is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
+    const aStar = "A* Search is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
+    const swarm = "Swarm Algorithm is <strong>weighted</strong> and <strong>does not guaruntee</strong> the shortest path";
+    const breadthFirst = "Breadth-First Search is <strong>unweighted</strong> and <strong>guaruntees</strong> the shortest path";
+    const depthFirst = "Depth-First Search is <strong>unweighted</strong> and <strong>does not guaruntee</strong> the shortest path";
     // The following section of code is resposible for managing the selection of an algorithm and pattern
     // by the user. The code also is responsible for clearing the board and running the search.
     
@@ -295,6 +335,7 @@ window.addEventListener('load', function() {
     const patterns = document.getElementsByClassName("pattern");
     const clearBoard = document.getElementById("clearBoard");
     const runSearch = document.getElementById("runSearch");
+    const infoText = document.getElementById("infoText");
     
     for (let i = 0; i < algorithms.length; i++) {
         // For each algorithm button, set the background color to dark blue
@@ -313,6 +354,27 @@ window.addEventListener('load', function() {
 
             // allow the board to adjust for a change in algorithm
             pathfinder.resetBoard(selectedAlgo.id);
+
+            // update the algorithm information
+            switch (algorithms[i].id) {
+                case "Dijkstra":
+                    infoText.innerHTML = djikstras;
+                    break;
+                case "A*Search":
+                    infoText.innerHTML = aStar;
+                    break;
+                case "Swarm":
+                    infoText.innerHTML = swarm;
+                    break;
+                case "BreadthFirstSearch":
+                    infoText.innerHTML = breadthFirst;
+                    break;
+                case "DepthFirstSearch":
+                    infoText.innerHTML = depthFirst;
+                    break;
+                default:
+                    infoText.innerHTML = "unexpected input"
+            }
         });
     }
     
