@@ -314,13 +314,13 @@ class Pathfinder {
                 this.createStairPattern();
                 break;
             case "randomMaze":
-                this.createStairPattern();
+                this.createRandomMaze();
                 break;
-            case "randomPattern":
-                this.createStairPattern();
+            case "recursiveDivisionMazeHor":
+                this.createRDMaze("horizontal");
                 break;
-            case "recursiveDivisionMaze":
-                this.createRDMaze();
+            case "recursiveDivisionMazeVert":
+                this.createRDMaze("vertical");
                 break;
             default:
                 alert("The requested pattern could not be created.");
@@ -348,7 +348,7 @@ class Pathfinder {
         }
     }
 
-    createRDMaze() {
+    createRDMaze(skew) {
         // This function creates a maze on the board using recursive division
 
         // Fill board perimeter with walls
@@ -358,13 +358,19 @@ class Pathfinder {
         for (let i = 1; i < this.height - 1; i++) this.changeNormalSquare(this.boardL[i][this.width - 1]);
 
         // recursively divide and fill the remaining spaces
-        this.recursiveDivide([0, this.width - 1], [0, this.height - 1], "x");
+        if (skew == "horizontal") {
+            this.recursiveDivide([0, this.width - 1], [0, this.height - 1], "y");
+        } else {
+            this.recursiveDivide([0, Math.floor((this.width - 1)/3)], [0, this.height - 1], "y");
+            this.recursiveDivide([(Math.floor((this.width - 1)/3) - 2), ((2 * Math.floor((this.width - 1)/3)) + 2)], [0, this.height - 1], "y");
+            this.recursiveDivide([(2 * Math.floor((this.width - 1)/3)), this.width - 1], [0, this.height - 1], "y");
+        }
 
     }
     recursiveDivide(xRange, yRange, direction) {
         // This function resursively divides a given range
-
-        if (direction == "x") {
+        debugger;
+        if (direction == "y") {
             // base case
             if (xRange[0] >= xRange[1] - 2) return; 
             // an even number between xRang[0] and xRange[1]
@@ -380,8 +386,8 @@ class Pathfinder {
             // make one hole in the wall
             this.changeNormalSquare(this.boardL[removal][division]);
             // recurse
-            this.recursiveDivide([xRange[0], division], yRange, "y");
-            this.recursiveDivide([division, xRange[1]], yRange, "y");
+            this.recursiveDivide([xRange[0], division], yRange, "x");
+            this.recursiveDivide([division, xRange[1]], yRange, "x");
 
         } else {
             // base case
@@ -399,13 +405,25 @@ class Pathfinder {
             // make one hole in the wall
             this.changeNormalSquare(this.boardL[division][removal]);
             // recurse
-            this.recursiveDivide(xRange, [yRange[0], division], "x");
-            this.recursiveDivide(xRange, [division, yRange[1]], "x");
+            this.recursiveDivide(xRange, [yRange[0], division], "y");
+            this.recursiveDivide(xRange, [division, yRange[1]], "y");
         }
+    }
+    createRandomMaze() {
+        // This function selects random nodes on the board to fill in as either weights or walls
+        // to create a "random maze"
 
+        let fillFactor = 40; // the total percentage of sqaures to fill as a wall
 
-
-
+        // For each row in the board
+        for (let i = 0; i < this.height; i++) {
+            // For each column in the board
+            for (let j = 0; j < this.width; j++) {
+                // generate a random number to see if the square should be filled
+                let random = Math.random() * 100;
+                if (random < fillFactor) this.changeNormalSquare(this.boardL[i][j]);
+            }
+        }
     }
 }
 
