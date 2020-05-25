@@ -94,6 +94,7 @@ class Pathfinder {
                     div: newSquareD,
                     start: false,
                     target: false,
+                    path: false,
                     wall: false,
                     weight: false,
                     visited: false,
@@ -258,10 +259,10 @@ class Pathfinder {
                 // reset every board with a wall or a weight
                 if (square.wall || square.weight) {
                     this.changeNormalSquare(square);
-                } else if (square.visited) {
+                } else if (square.visited || square.path) {
                     if (!square.target && !square.start) square.div.className = "normal";
                     square.visited = false;
-                }
+                } 
             }
         }
     }
@@ -372,7 +373,7 @@ class Pathfinder {
     }
     recursiveDivide(xRange, yRange, direction) {
         // This function resursively divides a given range
-        debugger;
+
         if (direction == "y") {
             // base case
             if (xRange[0] >= xRange[1] - 2) return; 
@@ -416,7 +417,7 @@ class Pathfinder {
         // This function selects random nodes on the board to fill in as either weights or walls
         // to create a "random maze"
 
-        let fillFactor = 40; // the total percentage of sqaures to fill as a wall
+        let fillFactor = 30; // the total percentage of sqaures to fill as a wall
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -479,7 +480,7 @@ class Pathfinder {
                 // stack.push(this.boardL[y][x + 1]);
                 this.visitSquareDFS(this.boardL[y][x + 1], stack);
                 x++;
-            }else  if (this.emptySquare(x, y + 1)) {
+            } else  if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y + 1][x];
                 // this.boardL[y + 1][x].previous = stack[stack.length - 1];
@@ -495,9 +496,9 @@ class Pathfinder {
                 x--;
             } else {
                 // All possible squares have been visited. Pop one square from the stack
-                let previous = stack.pop();
-                x = previous.x;
-                y = previous.y;
+                stack.pop();
+                x = stack[stack.length - 1].x;
+                y = stack[stack.length - 1].y;
             }
 
             if (stack == []) {
@@ -509,7 +510,7 @@ class Pathfinder {
                 alert("Pathway has been found");
                 targetFound = true;
                 // draw out the pathway
-                // TODO
+                this.backtrace(stack[stack.length - 1]);
             }
         }
     }
@@ -540,7 +541,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue);
                 if (this.boardL[y - 1][x].target) {
                     targetFound = true;
-                    // TODO backtrace
+                    this.backtrace(this.boardL[y - 1][x]);
                     break;
                 }
             }
@@ -552,7 +553,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue);
                 if (this.boardL[y][x + 1].target) {
                     targetFound = true;
-                    // TODO backtrace
+                    this.backtrace(this.boardL[y][x + 1]);
                     break;
                 }
             }
@@ -564,7 +565,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue);
                 if (this.boardL[y + 1][x].target) {
                     targetFound = true;
-                    // TODO backtrace
+                    this.backtrace(this.boardL[y + 1][x]);
                     break;
                 }
             }
@@ -576,7 +577,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue);
                 if (this.boardL[y][x - 1].target) {
                     targetFound = true;
-                    // TODO backtrace
+                    this.backtrace(this.boardL[y][x - 1]);
                     break;
                 }
             }
@@ -624,6 +625,16 @@ class Pathfinder {
         if (!nextSquare.target) {
             nextSquare.visited = true;
             nextSquare.div.className = "visited";
+        }
+    }
+    backtrace(target) {
+        // This function backtraces from the target square to the start square and
+        // highlights every square along the path
+        let currentSquare = target.previous;
+
+        while (!currentSquare.start) {
+            currentSquare.div.className = "path";
+            currentSquare = currentSquare.previous;
         }
     }
 }
