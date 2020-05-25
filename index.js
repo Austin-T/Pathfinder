@@ -228,13 +228,22 @@ class Pathfinder {
             square.div.className = "start";
             this.start = square;
 
+            // If the currently pressed square is "visited" this inidicates that it has just been
+            // discovered by a pathfinding algorithm. We would like to do an automatic recomputation
+            // of the algorithm in this case with the start square in the new position
+            if (this.target.visited) {
+                this.clearVisited();
+                this.runSearch();
+            }
+            
+
         } else {
             // we are adjusting the position of the target node
             // The start node will replace an existing squares other than the target
             if (square.start) return;
 
             // reset the old square
-            this.target.start = false;
+            this.target.target = false;
             this.target.div.className = "normal";
 
             // update the new square
@@ -243,6 +252,14 @@ class Pathfinder {
             square.weight = false;
             square.div.className = "target";
             this.target = square;
+
+            // If the currently pressed square is "visited" this inidicates that it has just been
+            // discovered by a pathfinding algorithm. We would like to do an automatic recomputation
+            // of the algorithm in this case with the target square in the new position
+            if (this.start.visited) {
+                this.clearVisited();
+                this.runSearch();
+            }
 
         }
     }
@@ -263,6 +280,24 @@ class Pathfinder {
                     if (!square.target && !square.start) square.div.className = "normal";
                     square.visited = false;
                 } 
+            }
+        }
+    }
+    clearVisited() {
+        // This funciton clears any square in the board wich has been marked as
+        // "visited" or "path". The function should be called before any recomputation
+        // of a path so that the new "visited" and "path" squares can be displayed
+
+        // For each row in the board
+        for (let i = 0; i < this.height; i++) {
+            // For each column in the board
+            for (let j = 0; j < this.width; j++) {
+                let square = this.boardL[i][j];
+                // reset every board with a wall or a weight
+                if (square.visited || square.path) {
+                    if (!square.target && !square.start) square.div.className = "normal";
+                    square.visited = false;
+                }
             }
         }
     }
@@ -429,7 +464,7 @@ class Pathfinder {
             }
         }
     }
-    runSearch(){
+    runSearch() {
         // This function runs a search from the start node to the target node using the 
         // currently selected algorithm specifid by this.algorithm
 
@@ -611,10 +646,8 @@ class Pathfinder {
         stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
-        if (!square.target) {
-            square.visited = true;
-            square.div.className = "visited";
-        }
+        square.visited = true;
+        if (!square.target) square.div.className = "visited";
     }
     visitSquareBFS(lastSquare, nextSquare, queue){
         // This function converts an unvisited square to a visited square for a depth
@@ -622,10 +655,8 @@ class Pathfinder {
         lastSquare.next = nextSquare;
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
-        if (!nextSquare.target) {
-            nextSquare.visited = true;
-            nextSquare.div.className = "visited";
-        }
+        nextSquare.visited = true;
+        if (!nextSquare.target) nextSquare.div.className = "visited";
     }
     backtrace(target) {
         // This function backtraces from the target square to the start square and
