@@ -45,14 +45,19 @@ class Pathfinder {
     //   this.buttonsOn = false;
     //   this.speed = "fast";
 
-    this.mousedown = false;     // indicates if the mouse is currently pressed down
-    this.currentPressedSquare = null;   // indicates the status of the currently pressed square
+        this.mousedown = false;     // indicates if the mouse is currently pressed down
+        this.currentPressedSquare = null;   // indicates the status of the currently pressed square
 
-    this.algorithm = null;
-    this.algoType = "wall"; // indicates wether the current selected algoritm is for walls or weights
+        this.algorithm = null;
+        this.algoType = "wall"; // indicates wether the current selected algoritm is for walls or weights
 
-    this.start = null;  // assigned to the square which is the start
-    this.target = null; // asigned to the square which is the target
+        this.start = null;  // assigned to the square which is the start
+        this.target = null; // asigned to the square which is the target
+
+        this.computing = false; // a true or false boolean indicating if there is an computation in progress
+        
+        this.squaresToAnimate = []; // a list of square objects to animate
+        this.delayTime = 20; // the amount of milliseconds between the animation of each node
     }
     
     initialise() {
@@ -232,8 +237,7 @@ class Pathfinder {
             // discovered by a pathfinding algorithm. We would like to do an automatic recomputation
             // of the algorithm in this case with the start square in the new position
             if (this.target.visited) {
-                this.clearVisited();
-                this.runSearch();
+                this.runSearch(false);
             }
             
 
@@ -257,10 +261,8 @@ class Pathfinder {
             // discovered by a pathfinding algorithm. We would like to do an automatic recomputation
             // of the algorithm in this case with the target square in the new position
             if (this.start.visited) {
-                this.clearVisited();
-                this.runSearch();
+                this.runSearch(false);
             }
-
         }
     }
 
@@ -464,32 +466,35 @@ class Pathfinder {
             }
         }
     }
-    runSearch() {
+    runSearch(animating) {
         // This function runs a search from the start node to the target node using the 
         // currently selected algorithm specifid by this.algorithm
-
+        this.computing = true;
+        this.clearVisited();
         switch(this.algorithm) {
             case "Dijkstra":
-                this.depthFirstSearch();
+                this.depthFirstSearch(animating);
                 break;
             case "A*Search":
-                this.depthFirstSearch();
+                this.depthFirstSearch(animating);
                 break;
             case "Swarm":
-                this.depthFirstSearch();
+                this.depthFirstSearch(animating);
                 break;
             case "BreadthFirstSearch":
-                this.breadthFirstSearch();
+                this.breadthFirstSearch(animating);
                 break;
             case "DepthFirstSearch":
-                this.depthFirstSearch();
+                this.depthFirstSearch(animating);
                 break;
             default:
                 alert("Unable to run the selected search");
         }
+        if (animating) this.animateSquares();
+        this.computing = false;
     }
 
-    depthFirstSearch(){
+    depthFirstSearch(animating){
         // This function runs a depth first search from the start node to the target node
         let x = this.start.x;
         let y = this.start.y;
@@ -506,28 +511,28 @@ class Pathfinder {
                 // stack[stack.length - 1].next = this.boardL[y - 1][x];
                 // this.boardL[y - 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y - 1][x]);
-                this.visitSquareDFS(this.boardL[y - 1][x], stack);
+                this.visitSquareDFS(this.boardL[y - 1][x], stack, animating);
                 y--;
             } else  if (this.emptySquare(x + 1, y )) {
                 // The right square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y][x + 1];
                 // this.boardL[y][x + 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x + 1]);
-                this.visitSquareDFS(this.boardL[y][x + 1], stack);
+                this.visitSquareDFS(this.boardL[y][x + 1], stack, animating);
                 x++;
             } else  if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y + 1][x];
                 // this.boardL[y + 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y + 1][x]);
-                this.visitSquareDFS(this.boardL[y + 1][x], stack);
+                this.visitSquareDFS(this.boardL[y + 1][x], stack, animating);
                 y++;
             } else  if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y][x - 1];
                 // this.boardL[y][x - 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x - 1]);
-                this.visitSquareDFS(this.boardL[y][x - 1], stack);
+                this.visitSquareDFS(this.boardL[y][x - 1], stack, animating);
                 x--;
             } else {
                 // All possible squares have been visited. Pop one square from the stack
@@ -542,15 +547,14 @@ class Pathfinder {
                 targetFound = true;
             } else if (stack[stack.length - 1].target) {
                 // we have reached the target
-                alert("Pathway has been found");
                 targetFound = true;
                 // draw out the pathway
-                this.backtrace(stack[stack.length - 1]);
+                this.backtrace(stack[stack.length - 1], animating);
             }
         }
     }
 
-    breadthFirstSearch() {
+    breadthFirstSearch(animating) {
         // This function runs a breadth first search from the start node to the target node
 
         this.start.visited = true;
@@ -559,24 +563,21 @@ class Pathfinder {
         let queue = [this.start];
 
         while(!targetFound) {
-            // select an unvisited square adjacent to the current square and push it to the stack
-            debugger;
-
             // Dequeue an element from the queue
             let dequeue = queue.shift();
-            console.log(dequeue.x);
             let x = dequeue.x;
             let y = dequeue.y;
 
+            // select an unvisited squares adjacent to the current square and enqueue them
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y - 1][x];
                 // this.boardL[y - 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y - 1][x]);
-                this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue);
+                this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue, animating);
                 if (this.boardL[y - 1][x].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y - 1][x]);
+                    this.backtrace(this.boardL[y - 1][x], animating);
                     break;
                 }
             }
@@ -585,10 +586,10 @@ class Pathfinder {
                 // stack[stack.length - 1].next = this.boardL[y][x + 1];
                 // this.boardL[y][x + 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x + 1]);
-                this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue);
+                this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue, animating);
                 if (this.boardL[y][x + 1].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y][x + 1]);
+                    this.backtrace(this.boardL[y][x + 1], animating);
                     break;
                 }
             }
@@ -597,10 +598,10 @@ class Pathfinder {
                 // stack[stack.length - 1].next = this.boardL[y + 1][x];
                 // this.boardL[y + 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y + 1][x]);
-                this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue);
+                this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue, animating);
                 if (this.boardL[y + 1][x].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y + 1][x]);
+                    this.backtrace(this.boardL[y + 1][x], animating);
                     break;
                 }
             }
@@ -609,10 +610,10 @@ class Pathfinder {
                 // stack[stack.length - 1].next = this.boardL[y][x - 1];
                 // this.boardL[y][x - 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x - 1]);
-                this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue);
+                this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue, animating);
                 if (this.boardL[y][x - 1].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y][x - 1]);
+                    this.backtrace(this.boardL[y][x - 1], animating);
                     break;
                 }
             }
@@ -640,32 +641,68 @@ class Pathfinder {
             return true;
         }
     }
-    visitSquareDFS(square, stack){
+    visitSquareDFS(square, stack, animating){
         // This function converts an unvisited square to a visited square for a depth
         // first search and adds it to the stack
         stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
         square.visited = true;
-        if (!square.target) square.div.className = "visited";
+        if (!square.target) {
+            if (animating) {
+                this.squaresToAnimate.push([square, "visited"])
+            } else {
+                square.div.className = "visited";
+            }   
+        }
     }
-    visitSquareBFS(lastSquare, nextSquare, queue){
+    visitSquareBFS(lastSquare, nextSquare, queue, animating){
         // This function converts an unvisited square to a visited square for a depth
         // first search and adds it to the queue
         lastSquare.next = nextSquare;
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
         nextSquare.visited = true;
-        if (!nextSquare.target) nextSquare.div.className = "visited";
+        if (!nextSquare.target) {
+            if (animating) {
+                this.squaresToAnimate.push([nextSquare, "visited"])
+            } else {
+                nextSquare.div.className = "visited";
+            }   
+        }
     }
-    backtrace(target) {
+    backtrace(target, animating) {
         // This function backtraces from the target square to the start square and
         // highlights every square along the path
         let currentSquare = target.previous;
 
         while (!currentSquare.start) {
-            currentSquare.div.className = "path";
+            if (animating) {
+                this.squaresToAnimate.push([currentSquare, "path"])
+            } else {
+                currentSquare.div.className = "path";
+            }
             currentSquare = currentSquare.previous;
+        }
+    }
+    inProgress() {
+        // This function returns true if there is currently an computation in progress
+        // and false otherwise
+        return this.computing;
+    }
+    animateSquares() {
+        // This function animates every node which has been added to this.squaresToAnimate
+        debugger;
+        for (let i = 0; i <= this.squaresToAnimate.length; i++) {
+            setTimeout(() => {
+                // Animate every square in the squares to animate list
+                if (i == this.squaresToAnimate.length) {
+                    // Reset the list when the last square is reached
+                    this.squaresToAnimate = [];
+                } else {
+                    this.squaresToAnimate[i][0].div.className = this.squaresToAnimate[i][1];
+                }
+            }, this.delayTime * i);
         }
     }
 }
@@ -708,6 +745,11 @@ window.addEventListener('load', function() {
     
         // Create an event listener to detect clicks
         algorithms[i].addEventListener('click', function() {
+            // Do not allow any actions to occur if the pathfinder is currently animating
+            if (pathfinder.inProgress()) {
+                alert("Wait for the animation to end.");
+                return;
+            }
             // Revert the style of the previously selected algorithm to its original styling
             if (selectedAlgo) selectedAlgo.style.backgroundColor = colors.darkBlue;
     
@@ -749,6 +791,11 @@ window.addEventListener('load', function() {
     
         // Create an event listener to detect clicks
         patterns[i].addEventListener('click', function() {
+            // Do not allow any actions to occur if the pathfinder is currently animating
+            if (pathfinder.inProgress()) {
+                alert("Wait for the animation to end.");
+                return;
+            }
             // Revert the style of the previously selected pattern to its original styling
             if (selectedPatt) selectedPatt.style.backgroundColor = colors.darkBlue;
     
@@ -764,6 +811,12 @@ window.addEventListener('load', function() {
     }
     
     clearBoard.addEventListener('click', function() {
+        // Do not allow any actions to occur if the pathfinder is currently animating
+        if (pathfinder.inProgress()) {
+            alert("Wait for the animation to end.");
+            return;
+        }
+
         // clear the board
         pathfinder.clearBoard();
     
@@ -775,14 +828,18 @@ window.addEventListener('load', function() {
     });
     
     runSearch.addEventListener('click', function() {
+        // Do not allow any actions to occur if the pathfinder is currently animating
+        if (pathfinder.inProgress()) {
+            alert("Wait for the animation to end.");
+            return;
+        }
+
         // Check if an appropriate algorithm has been selected
         if (!selectedAlgo) {
             alert("You must select an algorithm before running a search.");
             return;
         }
-        // Run the appropriate search
-        pathfinder.runSearch();
+        // Run the appropriate search with animation
+        pathfinder.runSearch(true);
     });
-
-
 });
