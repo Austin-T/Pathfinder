@@ -564,6 +564,13 @@ class Pathfinder {
 
         while(!targetFound) {
             // Dequeue an element from the queue
+            console.log(queue == []);
+            if (queue == []) {
+                // no pathway has been found
+                alert("No pathway was found");
+                targetFound = true;
+                break;
+            }
             let dequeue = queue.shift();
             let x = dequeue.x;
             let y = dequeue.y;
