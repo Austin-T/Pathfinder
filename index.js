@@ -246,7 +246,7 @@ class Pathfinder {
         }
     }
 
-    clearBoard(){
+    clearBoard() {
         // This function finds every square in the board which is either a wall
         // or a weight, and resets that square empty
 
@@ -259,7 +259,7 @@ class Pathfinder {
                 if (square.wall || square.weight) {
                     this.changeNormalSquare(square);
                 } else if (square.visited) {
-                    square.div.className = "normal";
+                    if (!square.target && !square.start) square.div.className = "normal";
                     square.visited = false;
                 }
             }
@@ -443,7 +443,7 @@ class Pathfinder {
                 this.depthFirstSearch();
                 break;
             case "BreadthFirstSearch":
-                this.depthFirstSearch();
+                this.breadthFirstSearch();
                 break;
             case "DepthFirstSearch":
                 this.depthFirstSearch();
@@ -458,43 +458,44 @@ class Pathfinder {
         let x = this.start.x;
         let y = this.start.y;
 
+        this.start.visited = true;
+
         let targetFound = false;
         let stack = [this.start];
 
         while(!targetFound) {
-            debugger;
             // select an unvisited square adjacent to the current square and push it to the stack
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y - 1][x];
                 // this.boardL[y - 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y - 1][x]);
-                this.visitSquare(this.boardL[y - 1][x], stack);
+                this.visitSquareDFS(this.boardL[y - 1][x], stack);
                 y--;
             } else  if (this.emptySquare(x + 1, y )) {
                 // The right square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y][x + 1];
                 // this.boardL[y][x + 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x + 1]);
-                this.visitSquare(this.boardL[y][x + 1], stack);
+                this.visitSquareDFS(this.boardL[y][x + 1], stack);
                 x++;
             }else  if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y + 1][x];
                 // this.boardL[y + 1][x].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y + 1][x]);
-                this.visitSquare(this.boardL[y + 1][x], stack);
+                this.visitSquareDFS(this.boardL[y + 1][x], stack);
                 y++;
             } else  if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
                 // stack[stack.length - 1].next = this.boardL[y][x - 1];
                 // this.boardL[y][x - 1].previous = stack[stack.length - 1];
                 // stack.push(this.boardL[y][x - 1]);
-                this.visitSquare(this.boardL[y][x - 1], stack);
+                this.visitSquareDFS(this.boardL[y][x - 1], stack);
                 x--;
             } else {
                 // All possible squares have been visited. Pop one square from the stack
-                let previous = stack.pop()
+                let previous = stack.pop();
                 x = previous.x;
                 y = previous.y;
             }
@@ -512,11 +513,86 @@ class Pathfinder {
             }
         }
     }
+
+    breadthFirstSearch() {
+        // This function runs a breadth first search from the start node to the target node
+
+        this.start.visited = true;
+        
+        let targetFound = false;
+        let queue = [this.start];
+
+        while(!targetFound) {
+            // select an unvisited square adjacent to the current square and push it to the stack
+            debugger;
+
+            // Dequeue an element from the queue
+            let dequeue = queue.shift();
+            console.log(dequeue.x);
+            let x = dequeue.x;
+            let y = dequeue.y;
+
+            if (this.emptySquare(x, y - 1)) {
+                // The top square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y - 1][x];
+                // this.boardL[y - 1][x].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y - 1][x]);
+                this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue);
+                if (this.boardL[y - 1][x].target) {
+                    targetFound = true;
+                    // TODO backtrace
+                    break;
+                }
+            }
+            if (this.emptySquare(x + 1, y)) {
+                // The right square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y][x + 1];
+                // this.boardL[y][x + 1].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y][x + 1]);
+                this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue);
+                if (this.boardL[y][x + 1].target) {
+                    targetFound = true;
+                    // TODO backtrace
+                    break;
+                }
+            }
+            if (this.emptySquare(x, y + 1)) {
+                // The bottom square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y + 1][x];
+                // this.boardL[y + 1][x].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y + 1][x]);
+                this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue);
+                if (this.boardL[y + 1][x].target) {
+                    targetFound = true;
+                    // TODO backtrace
+                    break;
+                }
+            }
+            if (this.emptySquare(x - 1, y)) {
+                // The left square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y][x - 1];
+                // this.boardL[y][x - 1].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y][x - 1]);
+                this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue);
+                if (this.boardL[y][x - 1].target) {
+                    targetFound = true;
+                    // TODO backtrace
+                    break;
+                }
+            }
+
+            if (queue == []) {
+                // no pathway has been found
+                alert("No pathway was found");
+                targetFound = true;
+            }
+        }
+    }
+
     emptySquare(x, y) {
         // This function returns true if the x and y coordinates corespond to an
         // empty square in the board which has not already been visited, occupied
         // by a wall, or anything otherwise
-        debugger;
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
             // the index is out of range
             return false;
@@ -528,15 +604,26 @@ class Pathfinder {
             return true;
         }
     }
-    visitSquare(square, stack){
-        // This function converts an unvisited square to a visited square and adds
-        // it to the stack
+    visitSquareDFS(square, stack){
+        // This function converts an unvisited square to a visited square for a depth
+        // first search and adds it to the stack
         stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
         if (!square.target) {
             square.visited = true;
             square.div.className = "visited";
+        }
+    }
+    visitSquareBFS(lastSquare, nextSquare, queue){
+        // This function converts an unvisited square to a visited square for a depth
+        // first search and adds it to the queue
+        lastSquare.next = nextSquare;
+        nextSquare.previous = lastSquare;
+        queue.push(nextSquare);
+        if (!nextSquare.target) {
+            nextSquare.visited = true;
+            nextSquare.div.className = "visited";
         }
     }
 }
