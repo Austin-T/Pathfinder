@@ -258,6 +258,9 @@ class Pathfinder {
                 // reset every board with a wall or a weight
                 if (square.wall || square.weight) {
                     this.changeNormalSquare(square);
+                } else if (square.visited) {
+                    square.div.className = "normal";
+                    square.visited = false;
                 }
             }
         }
@@ -425,6 +428,117 @@ class Pathfinder {
             }
         }
     }
+    runSearch(){
+        // This function runs a search from the start node to the target node using the 
+        // currently selected algorithm specifid by this.algorithm
+
+        switch(this.algorithm) {
+            case "Dijkstra":
+                this.depthFirstSearch();
+                break;
+            case "A*Search":
+                this.depthFirstSearch();
+                break;
+            case "Swarm":
+                this.depthFirstSearch();
+                break;
+            case "BreadthFirstSearch":
+                this.depthFirstSearch();
+                break;
+            case "DepthFirstSearch":
+                this.depthFirstSearch();
+                break;
+            default:
+                alert("Unable to run the selected search");
+        }
+    }
+
+    depthFirstSearch(){
+        // This function runs a depth first search from the start node to the target node
+        let x = this.start.x;
+        let y = this.start.y;
+
+        let targetFound = false;
+        let stack = [this.start];
+
+        while(!targetFound) {
+            debugger;
+            // select an unvisited square adjacent to the current square and push it to the stack
+            if (this.emptySquare(x, y - 1)) {
+                // The top square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y - 1][x];
+                // this.boardL[y - 1][x].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y - 1][x]);
+                this.visitSquare(this.boardL[y - 1][x], stack);
+                y--;
+            } else  if (this.emptySquare(x + 1, y )) {
+                // The right square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y][x + 1];
+                // this.boardL[y][x + 1].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y][x + 1]);
+                this.visitSquare(this.boardL[y][x + 1], stack);
+                x++;
+            }else  if (this.emptySquare(x, y + 1)) {
+                // The bottom square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y + 1][x];
+                // this.boardL[y + 1][x].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y + 1][x]);
+                this.visitSquare(this.boardL[y + 1][x], stack);
+                y++;
+            } else  if (this.emptySquare(x - 1, y)) {
+                // The left square has not been visited
+                // stack[stack.length - 1].next = this.boardL[y][x - 1];
+                // this.boardL[y][x - 1].previous = stack[stack.length - 1];
+                // stack.push(this.boardL[y][x - 1]);
+                this.visitSquare(this.boardL[y][x - 1], stack);
+                x--;
+            } else {
+                // All possible squares have been visited. Pop one square from the stack
+                let previous = stack.pop()
+                x = previous.x;
+                y = previous.y;
+            }
+
+            if (stack == []) {
+                // no pathway has been found
+                alert("No pathway was found");
+                targetFound = true;
+            } else if (stack[stack.length - 1].target) {
+                // we have reached the target
+                alert("Pathway has been found");
+                targetFound = true;
+                // draw out the pathway
+                // TODO
+            }
+        }
+    }
+    emptySquare(x, y) {
+        // This function returns true if the x and y coordinates corespond to an
+        // empty square in the board which has not already been visited, occupied
+        // by a wall, or anything otherwise
+        debugger;
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
+            // the index is out of range
+            return false;
+        } else if (this.boardL[y][x].visited || this.boardL[y][x].wall) {
+            // this position is occupied
+            return false;
+        } else {
+            // the position is empty
+            return true;
+        }
+    }
+    visitSquare(square, stack){
+        // This function converts an unvisited square to a visited square and adds
+        // it to the stack
+        stack[stack.length - 1].next = square;
+        square.previous = stack[stack.length - 1];
+        stack.push(square);
+        if (!square.target) {
+            square.visited = true;
+            square.div.className = "visited";
+        }
+    }
 }
 
 
@@ -538,7 +652,7 @@ window.addEventListener('load', function() {
             return;
         }
         // Run the appropriate search
-        // TODO
+        pathfinder.runSearch();
     });
 
 

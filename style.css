@@ -73,7 +73,7 @@ header {
     display: flex;
     flex-direction: row;
 }
-.legendWall, .legendWeight, .legendStart, .legendTarget, .legendPath {
+.legendWall, .legendWeight, .legendStart, .legendTarget, .legendPath, .legendVisited, .legendUnvisited {
     width: 20px;
     height: 20px;
     border: 1px solid grey;
@@ -92,4 +92,7 @@ header {
 }
 .path, .legendPath {
     background: yellow;
+}
+.visited, .legendVisited {
+    background: orange;
 }
