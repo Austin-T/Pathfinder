@@ -1,9 +1,11 @@
 class Pathfinder {
     constructor(height, width, boardDiv) {
         // This function creates an instance of the Pathfinder object.
+        // Parameters:
         // height - an integer representing the amount of rows in the board.
         // width - an integer representing the amount of columns in the board.
-        // boardDiv - a div object to display the pathfinder within
+        // boardDiv - a div object to display the pathfinder within.
+        // Output: None.
 
         this.height = height;   // the amount of row in the board
         this.width = width;     // the amount of columns in the board
@@ -15,35 +17,8 @@ class Pathfinder {
         this.rowHeight = String(100 / this.height) + "%"; // the total percent of the div height occupied by one row
         this.rowDisplay = "flex"; // the display style of a row in the board
 
-        this.squareBorder = "1px solid grey"; // the border style of a square
         this.squareWidth = String(100 / this.width) + "%"; // the total percent of the div width occupied by one square
         this.squareHeight = "100%"; // the total percent of the row height occupied by a square
-
-
-
-    //   this.start = null;
-    //   this.target = null;
-    //   this.object = null;
-    //   this.boardArray = [];
-    //   this.nodes = {};
-    //   this.nodesToAnimate = [];
-    //   this.objectNodesToAnimate = [];
-    //   this.shortestPathNodesToAnimate = [];
-    //   this.objectShortestPathNodesToAnimate = [];
-    //   this.wallsToAnimate = [];
-    //   this.mouseDown = false;
-    //   this.pressedNodeStatus = "normal";
-    //   this.previouslyPressedNodeStatus = null;
-    //   this.previouslySwitchedNode = null;
-    //   this.previouslySwitchedNodeWeight = 0;
-    //   this.keyDown = false;
-    //   this.algoDone = false;
-    //   this.currentAlgorithm = null;
-    //   this.currentHeuristic = null;
-    //   this.numberOfObjects = 0;
-    //   this.isObject = false;
-    //   this.buttonsOn = false;
-    //   this.speed = "fast";
 
         this.mousedown = false;     // indicates if the mouse is currently pressed down
         this.currentPressedSquare = null;   // indicates the status of the currently pressed square
@@ -59,20 +34,24 @@ class Pathfinder {
         this.squaresToAnimate = []; // a list of square objects to animate
         this.delayTime = 20; // the amount of milliseconds between the animation of each node
     }
-    
-    initialise() {
+    initialize() {
         // This function initializes the pithfinder object: a grid is created with
-        // numerous nodes, and event listeners are created for each node.
+        // numerous nodes, event listeners are created for each node, and then a start
+        // and target square are set in their defualt positions.
+        // Parameters: None.
+        // Ouptut: None.
 
         this.createGrid();
         this.addEventListeners();
         this.setDefaultSquares();
     }
-  
     createGrid() {
         // This function is responsible for creating an html grid which represents the
         // pathfinder. A secondary grid is also created as a list, which stores the properties
-        // and div of every square in the board
+        // and div of every square in the board. This function should be called as a subproces
+        // of initilaize().
+        // Parameters: None.
+        // Output: None.
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -108,7 +87,7 @@ class Pathfinder {
                 }
 
                 // style the square
-                newSquareD.style.border = this.squareBorder;
+                newSquareD.className = "unvisited";
                 newSquareD.style.width = this.squareWidth;
                 newSquareD.style.height = this.squareHeight;
 
@@ -118,11 +97,12 @@ class Pathfinder {
             }
         }
     }
-  
     addEventListeners() {
         // This function creates an event listener for every div which exists in 
         // the pathfinder board. This function should only be called after this.createGrid()
-        // has been executed
+        // has been executed. This function is a subprocess of this.initialize()
+        // Parameters: None.
+        // Output: None.
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -175,10 +155,14 @@ class Pathfinder {
             }
         }
     }
-
     setDefaultSquares() {
         // This function sets a start-sqaure and target-sqaure in 
-        // default positions on the board.
+        // default positions on the board. The function should be called
+        // as a subprocess of initialize after this.createGrid() and 
+        // this.addEventListeners.
+        // Parameters: None.
+        // Output: None.
+
         this.boardL[10][10].div.className = "start";
         this.boardL[10][10].start = true;
         this.start = this.boardL[10][10];
@@ -186,17 +170,21 @@ class Pathfinder {
         this.boardL[10][40].target = true;
         this.target = this.boardL[10][40];
     }
-
     changeNormalSquare(square){
         // This function converts the wall or weight property of a given square to
-        // normal properties, and vice versa.
+        // the "unvisited" property, and vice versa. This process is called by
+        // event listeners.
+        // Parameters:
+        // square - a square object
+        // Outputs: None.
+
         if (square.start || square.target) return;
 
         if (this.algoType == "wall"){
             if (square.wall) {
                 // swap wall-square for empty-square
                 square.wall = false;
-                square.div.className = "normal";
+                square.div.className = "unvisited";
             } else {
                 // swap empty-square for wall-square
                 square.wall = true;
@@ -206,7 +194,7 @@ class Pathfinder {
             if (square.weight) {
                 // swap weight square for empty-square
                 square.weight = false;
-                square.div.className = "normal";
+                square.div.className = "unvisited";
             } else {
                 // swap empty-square for weight-square
                 square.weight = true;
@@ -214,22 +202,24 @@ class Pathfinder {
             }
         }
     }
-
     changeSpecialSquare(square){
-        // This function adjusts the position of special squares such as "start" and "target"
+        // This function adjusts the position of special squares "start" and "target".
+        // The function is called by event listeners.
+        // Parameters:
+        // square - a square object
+        // Output: None.
+
         if (this.currentPressedSquare == "start") {
             // We are adjusting the position of the starting sqaure.
             // The start node will replace an existing squares other than the target
-            if (square.target) return;
+            if (square.target || square.wall || square.weight) return;
 
             // reset the old square
             this.start.start = false;
-            this.start.div.className = "normal";
+            this.start.div.className = "unvisited";
 
             // update the new square
             square.start = true;
-            square.wall = false;
-            square.weight = false;
             square.div.className = "start";
             this.start = square;
 
@@ -244,16 +234,15 @@ class Pathfinder {
         } else {
             // we are adjusting the position of the target node
             // The start node will replace an existing squares other than the target
-            if (square.start) return;
+            if (square.start || square.wall || square.weight) return;
 
             // reset the old square
             this.target.target = false;
-            this.target.div.className = "normal";
+            this.target.div.className = "unvisited";
+            
 
             // update the new square
             square.target = true;
-            square.wall = false;
-            square.weight = false;
             square.div.className = "target";
             this.target = square;
 
@@ -265,10 +254,11 @@ class Pathfinder {
             }
         }
     }
-
     clearBoard() {
-        // This function finds every square in the board which is either a wall
-        // or a weight, and resets that square empty
+        // This function finds every square in the board which is either a wall,
+        // visited, or a path, and resets that square to unvisited
+        // Parameters: None.
+        // Output: None.
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -279,16 +269,18 @@ class Pathfinder {
                 if (square.wall || square.weight) {
                     this.changeNormalSquare(square);
                 } else if (square.visited || square.path) {
-                    if (!square.target && !square.start) square.div.className = "normal";
+                    if (!square.target && !square.start) square.div.className = "unvisited";
                     square.visited = false;
-                } 
+                }
             }
         }
     }
     clearVisited() {
         // This funciton clears any square in the board wich has been marked as
         // "visited" or "path". The function should be called before any recomputation
-        // of a path so that the new "visited" and "path" squares can be displayed
+        // of a path so that the new "visited" and "path" squares can be displayed.
+        // Parameters: None.
+        // Output: None.
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -297,22 +289,25 @@ class Pathfinder {
                 let square = this.boardL[i][j];
                 // reset every board with a wall or a weight
                 if (square.visited || square.path) {
-                    if (!square.target && !square.start) square.div.className = "normal";
+                    if (!square.target && !square.start) square.div.className = "unvisited";
                     square.visited = false;
                 }
             }
         }
     }
-
     resetBoard(algorithm) {
-        // depending on the current state of the board an the algorithm passed
+        // Depending on the current state of the board an the algorithm passed
         // into the function, this function may change all wall squares to weighted
-        // squares or visa versa
+        // squares or visa versa.
+        // Parameters:
+        // algortihm - a string object representing an algorithm (e.g. "BreadthFirstSearch").
+        // Output: None.
+
         this.algorithm = algorithm;
 
         if (algorithm == "BreadthFirstSearch" || algorithm == "DepthFirstSearch") {
+            // We want to reset any weighted square to a wall
             this.algoType = "wall";
-
             // For each row in the board
             for (let i = 0; i < this.height; i++) {
                 // For each column in the board
@@ -327,6 +322,7 @@ class Pathfinder {
                 }
             }
         } else {
+            // Wewant to reset any wall square to a weighted square
             this.algoType = "weight";
             // For each row in the board
             for (let i = 0; i < this.height; i++) {
@@ -343,10 +339,12 @@ class Pathfinder {
             }
         }
     }
-
     setPattern(pattern) {
         // This function checks the name of the parameter 'pattern' and calls
-        // The appropriate function to create a pattern on the board
+        // The appropriate function to create a pattern on the board.
+        // Paremeters:
+        // pattern - a string representing the desired patttern (e.g. "stairPattern").
+        // Output: None.
 
         this.clearBoard();
 
@@ -367,9 +365,11 @@ class Pathfinder {
                 alert("The requested pattern could not be created.");
         }
     }
-
     createStairPattern(){
-        // This function creates a stair pattern on the board
+        // This function creates a stair pattern on the board. The function is called
+        // exclusively as a subprocess of this.setPattern().
+        // Parameters: None.
+        // Output: None.
 
         let xPos = 0;   // the x coordinate of the current square
         let yPos = 3;   // the y coordinate of the current square
@@ -388,9 +388,13 @@ class Pathfinder {
             }
         }
     }
-
     createRDMaze(skew) {
-        // This function creates a maze on the board using recursive division
+        // This function creates a maze on the board using recursive division. The maze
+        // is either vertically skewed or horizontally skewed. The function is calles as
+        // a subprocess of this.setPattern().
+        // Parameters:
+        // skew - a string representing the desired skew: "vertical" or "horizontal".
+        // Output: None.
 
         // Fill board perimeter with walls
         for (let i = 0; i < this.height; i++) this.changeNormalSquare(this.boardL[i][0]);
@@ -409,7 +413,16 @@ class Pathfinder {
 
     }
     recursiveDivide(xRange, yRange, direction) {
-        // This function resursively divides a given range
+        // This function resursively divides a given range using the this.changeNormalSquare()
+        // method. The function is called exclusively as a subprocess of createRDMaze().
+        // Parameters:
+        // xRange - a list of two integers, the first one represents the lower bound of the range
+        // and the second one represents the upperbound (e.g [0, 25]).
+        // yRange - a list of two integers, the first one represents the lower bound of the range
+        // and the second one represents the upperbound (e.g [0, 25]).
+        // direction - a character (either "y" or "x") representing the axis upon which the square
+        // should be divided.
+        // Output: None.
 
         if (direction == "y") {
             // base case
@@ -452,7 +465,10 @@ class Pathfinder {
     }
     createRandomMaze() {
         // This function selects random nodes on the board to fill in as either weights or walls
-        // to create a "random maze"
+        // to create a "random maze".The function is called exclusively as a subprocess of
+        // this.setPattern().
+        // Parameters: None.
+        // Output: None.
 
         let fillFactor = 30; // the total percentage of sqaures to fill as a wall
 
@@ -468,9 +484,15 @@ class Pathfinder {
     }
     runSearch(animating) {
         // This function runs a search from the start node to the target node using the 
-        // currently selected algorithm specifid by this.algorithm
+        // currently selected algorithm specifid by this.algorithm.
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
         this.computing = true;
         this.clearVisited();
+
         switch(this.algorithm) {
             case "Dijkstra":
                 this.depthFirstSearch(animating);
@@ -490,12 +512,21 @@ class Pathfinder {
             default:
                 alert("Unable to run the selected search");
         }
-        if (animating) this.animateSquares();
-        this.computing = false;
-    }
 
-    depthFirstSearch(animating){
-        // This function runs a depth first search from the start node to the target node
+        if (animating) {
+            this.animateSquares();
+        } else {
+            this.computing = false;
+        }
+    }
+    depthFirstSearch(animating) {
+        // This function runs a depth-first search from the start node to the target node.
+        // The process is called as a subprocess of this.runSearch().
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
         let x = this.start.x;
         let y = this.start.y;
 
@@ -508,30 +539,18 @@ class Pathfinder {
             // select an unvisited square adjacent to the current square and push it to the stack
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y - 1][x];
-                // this.boardL[y - 1][x].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y - 1][x]);
                 this.visitSquareDFS(this.boardL[y - 1][x], stack, animating);
                 y--;
             } else  if (this.emptySquare(x + 1, y )) {
                 // The right square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y][x + 1];
-                // this.boardL[y][x + 1].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y][x + 1]);
                 this.visitSquareDFS(this.boardL[y][x + 1], stack, animating);
                 x++;
             } else  if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y + 1][x];
-                // this.boardL[y + 1][x].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y + 1][x]);
                 this.visitSquareDFS(this.boardL[y + 1][x], stack, animating);
                 y++;
             } else  if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y][x - 1];
-                // this.boardL[y][x - 1].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y][x - 1]);
                 this.visitSquareDFS(this.boardL[y][x - 1], stack, animating);
                 x--;
             } else {
@@ -553,9 +572,13 @@ class Pathfinder {
             }
         }
     }
-
     breadthFirstSearch(animating) {
-        // This function runs a breadth first search from the start node to the target node
+        // This function runs a breadth-first search from the start node to the target node.
+        // The process is called as a subprocess of this.runSearch().
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
 
         this.start.visited = true;
         
@@ -578,9 +601,6 @@ class Pathfinder {
             // select an unvisited squares adjacent to the current square and enqueue them
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y - 1][x];
-                // this.boardL[y - 1][x].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y - 1][x]);
                 this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue, animating);
                 if (this.boardL[y - 1][x].target) {
                     targetFound = true;
@@ -590,9 +610,6 @@ class Pathfinder {
             }
             if (this.emptySquare(x + 1, y)) {
                 // The right square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y][x + 1];
-                // this.boardL[y][x + 1].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y][x + 1]);
                 this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue, animating);
                 if (this.boardL[y][x + 1].target) {
                     targetFound = true;
@@ -602,9 +619,6 @@ class Pathfinder {
             }
             if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y + 1][x];
-                // this.boardL[y + 1][x].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y + 1][x]);
                 this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue, animating);
                 if (this.boardL[y + 1][x].target) {
                     targetFound = true;
@@ -614,9 +628,6 @@ class Pathfinder {
             }
             if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
-                // stack[stack.length - 1].next = this.boardL[y][x - 1];
-                // this.boardL[y][x - 1].previous = stack[stack.length - 1];
-                // stack.push(this.boardL[y][x - 1]);
                 this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue, animating);
                 if (this.boardL[y][x - 1].target) {
                     targetFound = true;
@@ -632,11 +643,15 @@ class Pathfinder {
             }
         }
     }
-
     emptySquare(x, y) {
         // This function returns true if the x and y coordinates corespond to an
-        // empty square in the board which has not already been visited, occupied
-        // by a wall, or anything otherwise
+        // empty square in the board which has not already been visited or occupied
+        // by a wall.
+        // Parameters:
+        // x - an integer representing the x coordinate of the desired square in the board.
+        // y - an integer representing the y coordinate of the desired square in the board.
+        // Output: None.
+
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
             // the index is out of range
             return false;
@@ -650,7 +665,14 @@ class Pathfinder {
     }
     visitSquareDFS(square, stack, animating){
         // This function converts an unvisited square to a visited square for a depth
-        // first search and adds it to the stack
+        // first search and adds it to the stack.
+        // Parameters:
+        // square - a square object
+        // stack - an array representing a stack
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
         stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
@@ -665,7 +687,15 @@ class Pathfinder {
     }
     visitSquareBFS(lastSquare, nextSquare, queue, animating){
         // This function converts an unvisited square to a visited square for a depth
-        // first search and adds it to the queue
+        // first search and adds it to the queue.
+        // Parameters:
+        // lastSquare - a square object thats just been removed from the queue.
+        // nextSquare - an unvisited square object which is a neighbor of lastSquare.
+        // stack - an array representing a queue.
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
         lastSquare.next = nextSquare;
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
@@ -680,12 +710,18 @@ class Pathfinder {
     }
     backtrace(target, animating) {
         // This function backtraces from the target square to the start square and
-        // highlights every square along the path
+        // highlights every square along the path.
+        // Parameters:
+        // target - a square object
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
         let currentSquare = target.previous;
 
         while (!currentSquare.start) {
             if (animating) {
-                this.squaresToAnimate.push([currentSquare, "path"])
+                this.squaresToAnimate.push([currentSquare, "path"]);
             } else {
                 currentSquare.div.className = "path";
             }
@@ -694,18 +730,29 @@ class Pathfinder {
     }
     inProgress() {
         // This function returns true if there is currently an computation in progress
-        // and false otherwise
+        // and false otherwise.
+        // Parameters: None.
+        // Output: None.
+
         return this.computing;
     }
     animateSquares() {
-        // This function animates every node which has been added to this.squaresToAnimate
+        // This function animates every node which has been added to this.squaresToAnimate.
+        // The function is called exclusively as a subprocess of this.runSearch().
+        // Parameters: None.
+        // Output: None.
+
         debugger;
         for (let i = 0; i <= this.squaresToAnimate.length; i++) {
             setTimeout(() => {
                 // Animate every square in the squares to animate list
                 if (i == this.squaresToAnimate.length) {
-                    // Reset the list when the last square is reached
+                    // Reset the list when the last square is reached.
+                    // The reset must occur in the timeout function. Otherwise,
+                    // the reset will be executed asynchronously before the animation
+                    // is finished.
                     this.squaresToAnimate = [];
+                    this.computing = false;
                 } else {
                     this.squaresToAnimate[i][0].div.className = this.squaresToAnimate[i][1];
                 }
@@ -722,7 +769,7 @@ window.addEventListener('load', function() {
     let pathfinder = new Pathfinder(21, 51, document.getElementById("board"));
 
     // Initialize the pathfinder
-    pathfinder.initialise();
+    pathfinder.initialize();
 
     const colors = {
         darkBlue: "rgba(0, 0, 40)",
@@ -734,6 +781,7 @@ window.addEventListener('load', function() {
     const swarm = "Swarm Algorithm is <strong>weighted</strong> and <strong>does not guaruntee</strong> the shortest path";
     const breadthFirst = "Breadth-First Search is <strong>unweighted</strong> and <strong>guaruntees</strong> the shortest path";
     const depthFirst = "Depth-First Search is <strong>unweighted</strong> and <strong>does not guaruntee</strong> the shortest path";
+
     // The following section of code is resposible for managing the selection of an algorithm and pattern
     // by the user. The code also is responsible for clearing the board and running the search.
     
