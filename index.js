@@ -212,7 +212,7 @@ class Pathfinder {
         // Parameters:
         // square - a square object
         // Output: None.
-
+        debugger;
         if (this.currentPressedSquare == "start") {
             // We are adjusting the position of the starting sqaure.
             // The start node will replace an existing squares other than the target
@@ -280,9 +280,11 @@ class Pathfinder {
                     } else {
                         square.div.className = "unvisited";
                     }
-                    square.visited = false;
-                    square.path = false;
                 }
+                square.wall = false;
+                square.weight = false;
+                square.visited = false;
+                square.path = false;
             }
         }
     }
@@ -300,15 +302,19 @@ class Pathfinder {
                 let square = this.boardL[i][j];
                 // reset every board with a wall or a weight
                 if (square.visited || square.path) {
-                if (square.target) {
-                    square.div.className = "target";
-                } else if (square.start) {
-                    square.div.className = "start"
-                } else {
-                    square.div.className = "unvisited";
-                }
-                square.visited = false;
-                square.path = false;
+                    if (square.target) {
+                        square.div.className = "target";
+                    } else if (square.start) {
+                        square.div.className = "start";
+                    } else if (square.wall) {
+                        square.div.className = "wall";
+                    } else if (square.weight) {
+                        square.div.className = "weight";
+                    } else {
+                        square.div.className = "unvisited";
+                    }
+                    square.visited = false;
+                    square.path = false;
                 }
             }
         }
@@ -740,6 +746,7 @@ class Pathfinder {
         for (let i = 0; i < this.height; i++) {
             for (let j = 0; j < this.width; j++) {
                 this.boardL[i][j].distance = Infinity;
+                this.boardL[i][j].exhausted = false;
             }
         }
 
@@ -761,8 +768,8 @@ class Pathfinder {
                 }
             }
             smallestFound.exhausted = true;
-            console.log(smallestFound);
-            debugger;
+            //console.log(smallestFound);
+            //debugger;
 
             let y = smallestFound.y;
             let x = smallestFound.x;
@@ -867,7 +874,7 @@ class Pathfinder {
         // Parameters: None.
         // Output: None.
 
-        debugger;
+        //debugger;
         for (let i = 0; i <= this.squaresToAnimate.length; i++) {
             setTimeout(() => {
                 // Animate every square in the squares to animate list
