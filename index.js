@@ -33,6 +33,8 @@ class Pathfinder {
         
         this.squaresToAnimate = []; // a list of square objects to animate
         this.delayTime = 20; // the amount of milliseconds between the animation of each node
+
+        this.weightValue = 5; // The weighted cost of travelling through a weighted square on the grid
     }
     initialize() {
         // This function initializes the pithfinder object: a grid is created with
@@ -83,7 +85,9 @@ class Pathfinder {
                     weight: false,
                     visited: false,
                     previous: null,
-                    next: null
+                    next: null,
+                    distance: Infinity,
+                    exhausted: false
                 }
 
                 // style the square
@@ -269,8 +273,15 @@ class Pathfinder {
                 if (square.wall || square.weight) {
                     this.changeNormalSquare(square);
                 } else if (square.visited || square.path) {
-                    if (!square.target && !square.start) square.div.className = "unvisited";
+                    if (square.target) {
+                        square.div.className = "target";
+                    } else if (square.start) {
+                        square.div.className = "start"
+                    } else {
+                        square.div.className = "unvisited";
+                    }
                     square.visited = false;
+                    square.path = false;
                 }
             }
         }
@@ -289,8 +300,15 @@ class Pathfinder {
                 let square = this.boardL[i][j];
                 // reset every board with a wall or a weight
                 if (square.visited || square.path) {
-                    if (!square.target && !square.start) square.div.className = "unvisited";
-                    square.visited = false;
+                if (square.target) {
+                    square.div.className = "target";
+                } else if (square.start) {
+                    square.div.className = "start"
+                } else {
+                    square.div.className = "unvisited";
+                }
+                square.visited = false;
+                square.path = false;
                 }
             }
         }
@@ -495,7 +513,7 @@ class Pathfinder {
 
         switch(this.algorithm) {
             case "Dijkstra":
-                this.depthFirstSearch(animating);
+                this.dijkstrasAlgorithm(animating);
                 break;
             case "A*Search":
                 this.depthFirstSearch(animating);
@@ -682,7 +700,7 @@ class Pathfinder {
                 this.squaresToAnimate.push([square, "visited"])
             } else {
                 square.div.className = "visited";
-            }   
+            }
         }
     }
     visitSquareBFS(lastSquare, nextSquare, queue, animating){
@@ -708,6 +726,104 @@ class Pathfinder {
             }   
         }
     }
+    dijkstrasAlgorithm(animating) {
+        // This function finds the shortest distance between a start node and a target
+        // node. The function is called exclusively as a subprocess of this.runSearch().
+        // We stop checking all the nodes when each empty node surrounding the target has
+        // been visited
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
+        // let the distance of all squares from the start be infinity
+        for (let i = 0; i < this.height; i++) {
+            for (let j = 0; j < this.width; j++) {
+                this.boardL[i][j].distance = Infinity;
+            }
+        }
+
+        // let the distance from the start square to itself be zero
+        this.start.distance = 0;
+        this.start.visited = true;
+
+        let targetFound = false;
+        while (!targetFound) {
+            // visit the square with the smallest known distance from the start vertex
+            let smallestFound = null;
+            let smallestValue = Infinity;
+            for (let i = 0; i < this.height; i++) {
+                for (let j = 0; j < this.width; j++) {
+                    if (!this.boardL[i][j].exhausted && this.boardL[i][j].distance < smallestValue) {
+                        smallestFound = this.boardL[i][j];
+                        smallestValue = this.boardL[i][j].distance;
+                    }
+                }
+            }
+            smallestFound.exhausted = true;
+            console.log(smallestFound);
+            debugger;
+
+            let y = smallestFound.y;
+            let x = smallestFound.x;
+
+            // Update the unvisited neighbors of the current square
+            this.dijkstraUpdate(smallestFound, x, y - 1, animating);
+            this.dijkstraUpdate(smallestFound, x - 1, y, animating);
+            this.dijkstraUpdate(smallestFound, x + 1, y, animating);
+            this.dijkstraUpdate(smallestFound, x, y + 1, animating);
+
+            if (this.target.distance != Infinity) {
+                // The target has been found (optimally in this case)
+                this.backtrace(this.target, animating);
+                targetFound = true;
+            }
+        }
+    }
+    dijkstraUpdate(previousSquare, x, y, animating) {
+        // This function records the distance to the starting node of a square
+        // wich neighbors 'previousSquare, if that distance is shorter than its previosuly
+        // recorded distance. If the distance of the square is updated then its
+        // "previous" is set to 'previousSquare'.
+        // Parameters:
+        // previousSquare - a square object.
+        // x - an integer representing the x coordinate of the neighbor square in the board.
+        // y - an integer representing the y coordinate of the neighbor square in the board.
+        // Output: None.
+
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
+            // the index is out of range
+            return;
+        }
+
+        if (this.boardL[y][x].weight) {
+            if (previousSquare.distance + this.weightValue < this.boardL[y][x].distance) {
+                this.boardL[y][x].distance = previousSquare.distance + this.weightValue;
+                this.boardL[y][x].previous = previousSquare;
+            }
+        } else {
+            if (previousSquare.distance + 1 < this.boardL[y][x].distance) {
+                this.boardL[y][x].distance = previousSquare.distance + 1;
+                this.boardL[y][x].previous = previousSquare;
+            }
+        }
+        if (!this.boardL[y][x].target && !this.boardL[y][x].start) {
+            if (animating) {
+                if (this.boardL[y][x].weight) {
+                    this.squaresToAnimate.push([this.boardL[y][x], "weightVisited"]);
+                } else {
+                    this.squaresToAnimate.push([this.boardL[y][x], "visited"]);
+                }
+            } else {
+                if (this.boardL[y][x].weight) {
+                    this.boardL[y][x].div.className = "weightVisited";
+                } else {
+                    this.boardL[y][x].div.className = "visited";
+                }
+            }
+        }
+        this.boardL[y][x].visited = true;
+    }
     backtrace(target, animating) {
         // This function backtraces from the target square to the start square and
         // highlights every square along the path.
@@ -721,10 +837,19 @@ class Pathfinder {
 
         while (!currentSquare.start) {
             if (animating) {
-                this.squaresToAnimate.push([currentSquare, "path"]);
+                if (currentSquare.weight) {
+                    this.squaresToAnimate.push([currentSquare, "weightPath"]);
+                } else {
+                    this.squaresToAnimate.push([currentSquare, "path"]);
+                }
             } else {
-                currentSquare.div.className = "path";
+                if (currentSquare.weight) {
+                    currentSquare.div.className = "weightPath";
+                } else {
+                    currentSquare.div.className = "path";
+                }
             }
+            currentSquare.path = true;
             currentSquare = currentSquare.previous;
         }
     }
