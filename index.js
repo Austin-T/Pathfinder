@@ -86,8 +86,8 @@ class Pathfinder {
                     visited: false,
                     previous: null,
                     next: null,
-                    distance: Infinity
-                    // exhausted: false
+                    distance: Infinity,
+                    heuristic: Infinity
                 }
 
                 // style the square
@@ -524,7 +524,7 @@ class Pathfinder {
                 this.dijkstrasAlgorithm(animating);
                 break;
             case "A*Search":
-                this.depthFirstSearch(animating);
+                this.aStarSearch(animating);
                 break;
             case "Swarm":
                 this.depthFirstSearch(animating);
@@ -776,8 +776,6 @@ class Pathfinder {
 
         // let the distance from the start square to itself be zero
         this.start.distance = 0;
-        // this.start.visited = true;
-        this.start.div.className = "startVisited";
 
         let targetFound = false;
         while (!targetFound) {
@@ -793,6 +791,8 @@ class Pathfinder {
                 }
             }
             smallestFound.visited = true;
+
+            // animate the most recently visited node, "smallestFound"
             if (animating) {
                 if (smallestFound.weight) {
                     this.squaresToAnimate.push([smallestFound, "weightVisited"]);
@@ -814,8 +814,6 @@ class Pathfinder {
                     smallestFound.div.className = "visited";
                 }
             }
-            //console.log(smallestFound);
-            //debugger;
 
             let y = smallestFound.y;
             let x = smallestFound.x;
@@ -860,30 +858,122 @@ class Pathfinder {
                 nextSquare.previous = previousSquare;
             }
         }
-        // if (!nextSquare.target && !nextSquare.start) {
-        //     if (animating) {
-        //         if (nextSquare.weight) {
-        //             this.squaresToAnimate.push([nextSquare, "weightVisited"]);
-        //         } else if (nextSquare.target) {
-        //             this.squaresToAnimate.push([nextSquare, "targetVisited"]);
-        //         } else if (nextSquare.start) {
-        //             this.squaresToAnimate.push([nextSquare, "startVisited"]);
-        //         } else {
-        //             this.squaresToAnimate.push([nextSquare, "visited"]);
-        //         }
-        //     } else {
-        //         if (nextSquare.weight) {
-        //             nextSquare.div.className = "weightVisited";
-        //         } else if (nextSquare.target) {
-        //             nextSquare.div.className = "targetVisited";
-        //         } else if (nextSquare.start) {
-        //             nextSquare.div.className = "startVisited";
-        //         } else {
-        //             nextSquare.div.className = "visited";
-        //         }
-        //     }
-        // }
-        // this.boardL[y][x].visited = true;
+    }
+    aStarSearch(animating) {
+        // This function finds the shortest distance between a start node and a target
+        // node. The function is called exclusively as a subprocess of this.runSearch().
+        // We stop checking all the nodes when each empty node surrounding the target has
+        // been visited.
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
+        // let the distance of all squares from the start be infinity
+        for (let i = 0; i < this.height; i++) {
+            for (let j = 0; j < this.width; j++) {
+                this.boardL[i][j].distance = Infinity;
+                this.boardL[i][j].visited = false;
+                this.boardL[i][j].heuristic = this.distanceToTarget(this.boardL[i][j]);
+            }
+        }
+
+        // let the distance from the start square to itself be zero
+        this.start.distance = 0;
+        
+        let targetFound = false;
+        while (!targetFound) {
+            // visit the square with the smallest known distance from the start vertex
+            let smallestFound = null;
+            let smallestValue = Infinity;
+            for (let i = 0; i < this.height; i++) {
+                for (let j = 0; j < this.width; j++) {
+                    if (!this.boardL[i][j].visited && this.boardL[i][j].distance + this.boardL[i][j].heuristic < smallestValue) {
+                        smallestFound = this.boardL[i][j];
+                        smallestValue = this.boardL[i][j].distance + this.boardL[i][j].heuristic;
+                    }
+                }
+            }
+            smallestFound.visited = true;
+
+            // animate the most recently visited node, "smallestFound"
+            if (animating) {
+                if (smallestFound.weight) {
+                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
+                } else if (smallestFound.target) {
+                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
+                } else if (smallestFound.start) {
+                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
+                } else {
+                    this.squaresToAnimate.push([smallestFound, "visited"]);
+                }
+            } else {
+                if (smallestFound.weight) {
+                    smallestFound.div.className = "weightVisited";
+                } else if (smallestFound.target) {
+                    smallestFound.div.className = "targetVisited";
+                } else if (smallestFound.start) {
+                    smallestFound.div.className = "startVisited";
+                } else {
+                    smallestFound.div.className = "visited";
+                }
+            }
+
+            let y = smallestFound.y;
+            let x = smallestFound.x;
+
+            // Update the unvisited neighbors of the current square
+            this.aStarUpdate(smallestFound, x, y - 1, animating);
+            this.aStarUpdate(smallestFound, x - 1, y, animating);
+            this.aStarUpdate(smallestFound, x + 1, y, animating);
+            this.aStarUpdate(smallestFound, x, y + 1, animating);
+
+            if (this.target.distance != Infinity) {
+                // The target has been found (optimally in this case)
+                this.backtrace(animating);
+                targetFound = true;
+            }
+        }
+    }
+    aStarUpdate(previousSquare, x, y, animating) {
+        // This function records the distance to the starting node of a square
+        // wich neighbors 'previousSquare', if that distance is shorter than its previosuly
+        // recorded distance. If the distance of the square is updated then its
+        // "previous" is set to 'previousSquare'.
+        // Parameters:
+        // previousSquare - a square object.
+        // x - an integer representing the x coordinate of the neighbor square in the board.
+        // y - an integer representing the y coordinate of the neighbor square in the board.
+        // Output: None.
+
+        if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
+            // the index is out of range
+            return;
+        }
+        let nextSquare = this.boardL[y][x];
+        if (nextSquare.weight) {
+            if (previousSquare.distance + this.weightValue < nextSquare.distance) {
+                nextSquare.distance = previousSquare.distance + this.weightValue;
+                nextSquare.previous = previousSquare;
+            }
+        } else {
+            if (previousSquare.distance + 1 < nextSquare.distance) {
+                nextSquare.distance = previousSquare.distance + 1;
+                nextSquare.previous = previousSquare;
+            }
+        }
+    }
+    distanceToTarget(square) {
+        // This function calculates the distance (number of squares) between a given
+        // square and the target square. The function is called exclusively as a 
+        // subprocess of A* Search in order to calculate the heuristic value for a square.
+        // Parameters:
+        // Square - a square object
+        // Output:
+        // totalDistance - a integer representing the distance between the squar and the target
+
+        let totalDistance = Math.abs(square.x - this.target.x) + Math.abs(square.y - this.target.y);
+        return totalDistance;
     }
     backtrace(animating) {
         // This function backtraces from the target square to the start square and
