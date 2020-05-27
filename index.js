@@ -86,8 +86,8 @@ class Pathfinder {
                     visited: false,
                     previous: null,
                     next: null,
-                    distance: Infinity,
-                    exhausted: false
+                    distance: Infinity
+                    // exhausted: false
                 }
 
                 // style the square
@@ -770,13 +770,13 @@ class Pathfinder {
         for (let i = 0; i < this.height; i++) {
             for (let j = 0; j < this.width; j++) {
                 this.boardL[i][j].distance = Infinity;
-                this.boardL[i][j].exhausted = false;
+                this.boardL[i][j].visited = false;
             }
         }
 
         // let the distance from the start square to itself be zero
         this.start.distance = 0;
-        this.start.visited = true;
+        // this.start.visited = true;
         this.start.div.className = "startVisited";
 
         let targetFound = false;
@@ -786,13 +786,34 @@ class Pathfinder {
             let smallestValue = Infinity;
             for (let i = 0; i < this.height; i++) {
                 for (let j = 0; j < this.width; j++) {
-                    if (!this.boardL[i][j].exhausted && this.boardL[i][j].distance < smallestValue) {
+                    if (!this.boardL[i][j].visited && this.boardL[i][j].distance < smallestValue) {
                         smallestFound = this.boardL[i][j];
                         smallestValue = this.boardL[i][j].distance;
                     }
                 }
             }
-            smallestFound.exhausted = true;
+            smallestFound.visited = true;
+            if (animating) {
+                if (smallestFound.weight) {
+                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
+                } else if (smallestFound.target) {
+                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
+                } else if (smallestFound.start) {
+                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
+                } else {
+                    this.squaresToAnimate.push([smallestFound, "visited"]);
+                }
+            } else {
+                if (smallestFound.weight) {
+                    smallestFound.div.className = "weightVisited";
+                } else if (smallestFound.target) {
+                    smallestFound.div.className = "targetVisited";
+                } else if (smallestFound.start) {
+                    smallestFound.div.className = "startVisited";
+                } else {
+                    smallestFound.div.className = "visited";
+                }
+            }
             //console.log(smallestFound);
             //debugger;
 
@@ -836,33 +857,33 @@ class Pathfinder {
         } else {
             if (previousSquare.distance + 1 < nextSquare.distance) {
                 nextSquare.distance = previousSquare.distance + 1;
-            nextSquare.previous = previousSquare;
+                nextSquare.previous = previousSquare;
             }
         }
-        if (!nextSquare.target && !nextSquare.start) {
-            if (animating) {
-                if (nextSquare.weight) {
-                    this.squaresToAnimate.push([nextSquare, "weightVisited"]);
-                } else if (nextSquare.target) {
-                    this.squaresToAnimate.push([nextSquare, "targetVisited"]);
-                } else if (nextSquare.start) {
-                    this.squaresToAnimate.push([nextSquare, "startVisited"]);
-                } else {
-                    this.squaresToAnimate.push([nextSquare, "visited"]);
-                }
-            } else {
-                if (nextSquare.weight) {
-                    nextSquare.div.className = "weightVisited";
-                } else if (nextSquare.target) {
-                    nextSquare.div.className = "targetVisited";
-                } else if (nextSquare.start) {
-                    nextSquare.div.className = "startVisited";
-                } else {
-                    nextSquare.div.className = "visited";
-                }
-            }
-        }
-        this.boardL[y][x].visited = true;
+        // if (!nextSquare.target && !nextSquare.start) {
+        //     if (animating) {
+        //         if (nextSquare.weight) {
+        //             this.squaresToAnimate.push([nextSquare, "weightVisited"]);
+        //         } else if (nextSquare.target) {
+        //             this.squaresToAnimate.push([nextSquare, "targetVisited"]);
+        //         } else if (nextSquare.start) {
+        //             this.squaresToAnimate.push([nextSquare, "startVisited"]);
+        //         } else {
+        //             this.squaresToAnimate.push([nextSquare, "visited"]);
+        //         }
+        //     } else {
+        //         if (nextSquare.weight) {
+        //             nextSquare.div.className = "weightVisited";
+        //         } else if (nextSquare.target) {
+        //             nextSquare.div.className = "targetVisited";
+        //         } else if (nextSquare.start) {
+        //             nextSquare.div.className = "startVisited";
+        //         } else {
+        //             nextSquare.div.className = "visited";
+        //         }
+        //     }
+        // }
+        // this.boardL[y][x].visited = true;
     }
     backtrace(animating) {
         // This function backtraces from the target square to the start square and
