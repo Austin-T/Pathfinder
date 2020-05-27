@@ -327,6 +327,8 @@ class Pathfinder {
         // algortihm - a string object representing an algorithm (e.g. "BreadthFirstSearch").
         // Output: None.
 
+        this.clearVisited();
+
         this.algorithm = algorithm;
 
         if (algorithm == "BreadthFirstSearch" || algorithm == "DepthFirstSearch") {
@@ -555,6 +557,7 @@ class Pathfinder {
         let y = this.start.y;
 
         this.start.visited = true;
+        this.start.div.className = "startVisited";
 
         let targetFound = false;
         let stack = [this.start];
@@ -592,7 +595,7 @@ class Pathfinder {
                 // we have reached the target
                 targetFound = true;
                 // draw out the pathway
-                this.backtrace(stack[stack.length - 1], animating);
+                this.backtrace(animating);
             }
         }
     }
@@ -605,6 +608,7 @@ class Pathfinder {
         // Output: None.
 
         this.start.visited = true;
+        this.start.div.className = "startVisited";
         
         let targetFound = false;
         let queue = [this.start];
@@ -628,7 +632,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue, animating);
                 if (this.boardL[y - 1][x].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y - 1][x], animating);
+                    this.backtrace(animating);
                     break;
                 }
             }
@@ -637,7 +641,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue, animating);
                 if (this.boardL[y][x + 1].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y][x + 1], animating);
+                    this.backtrace(animating);
                     break;
                 }
             }
@@ -646,7 +650,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue, animating);
                 if (this.boardL[y + 1][x].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y + 1][x], animating);
+                    this.backtrace(animating);
                     break;
                 }
             }
@@ -655,7 +659,7 @@ class Pathfinder {
                 this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue, animating);
                 if (this.boardL[y][x - 1].target) {
                     targetFound = true;
-                    this.backtrace(this.boardL[y][x - 1], animating);
+                    this.backtrace(animating);
                     break;
                 }
             }
@@ -701,9 +705,19 @@ class Pathfinder {
         square.previous = stack[stack.length - 1];
         stack.push(square);
         square.visited = true;
-        if (!square.target) {
-            if (animating) {
-                this.squaresToAnimate.push([square, "visited"])
+        if (animating) {
+            if (square.target) {
+                this.squaresToAnimate.push([square, "targetVisited"]);
+            } else if (square.start) {
+                this.squaresToAnimate.push([square, "startVisited"]);
+            } else {
+                this.squaresToAnimate.push([square, "visited"]);
+            }
+        } else {
+            if (square.target) {
+                square.div.className = "targetVisited";
+            } else if (square.start) {
+                square.div.className = "startVisited";
             } else {
                 square.div.className = "visited";
             }
@@ -724,12 +738,22 @@ class Pathfinder {
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
         nextSquare.visited = true;
-        if (!nextSquare.target) {
-            if (animating) {
-                this.squaresToAnimate.push([nextSquare, "visited"])
+        if (animating) {
+            if (nextSquare.target) {
+                this.squaresToAnimate.push([nextSquare, "targetVisited"]);
+            } else if (nextSquare.start) {
+                this.squaresToAnimate.push([nextSquare, "startVisited"]);
+            } else {
+                this.squaresToAnimate.push([nextSquare, "visited"]);
+            }
+        } else {
+            if (nextSquare.target) {
+                nextSquare.div.className = "targetVisited";
+            } else if (nextSquare.start) {
+                nextSquare.div.className = "startVisited";
             } else {
                 nextSquare.div.className = "visited";
-            }   
+            }
         }
     }
     dijkstrasAlgorithm(animating) {
@@ -753,6 +777,7 @@ class Pathfinder {
         // let the distance from the start square to itself be zero
         this.start.distance = 0;
         this.start.visited = true;
+        this.start.div.className = "startVisited";
 
         let targetFound = false;
         while (!targetFound) {
@@ -782,7 +807,7 @@ class Pathfinder {
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
-                this.backtrace(this.target, animating);
+                this.backtrace(animating);
                 targetFound = true;
             }
         }
@@ -802,56 +827,74 @@ class Pathfinder {
             // the index is out of range
             return;
         }
-
-        if (this.boardL[y][x].weight) {
-            if (previousSquare.distance + this.weightValue < this.boardL[y][x].distance) {
-                this.boardL[y][x].distance = previousSquare.distance + this.weightValue;
-                this.boardL[y][x].previous = previousSquare;
+        let nextSquare = this.boardL[y][x];
+        if (nextSquare.weight) {
+            if (previousSquare.distance + this.weightValue < nextSquare.distance) {
+                nextSquare.distance = previousSquare.distance + this.weightValue;
+                nextSquare.previous = previousSquare;
             }
         } else {
-            if (previousSquare.distance + 1 < this.boardL[y][x].distance) {
-                this.boardL[y][x].distance = previousSquare.distance + 1;
-                this.boardL[y][x].previous = previousSquare;
+            if (previousSquare.distance + 1 < nextSquare.distance) {
+                nextSquare.distance = previousSquare.distance + 1;
+            nextSquare.previous = previousSquare;
             }
         }
-        if (!this.boardL[y][x].target && !this.boardL[y][x].start) {
+        if (!nextSquare.target && !nextSquare.start) {
             if (animating) {
-                if (this.boardL[y][x].weight) {
-                    this.squaresToAnimate.push([this.boardL[y][x], "weightVisited"]);
+                if (nextSquare.weight) {
+                    this.squaresToAnimate.push([nextSquare, "weightVisited"]);
+                } else if (nextSquare.target) {
+                    this.squaresToAnimate.push([nextSquare, "targetVisited"]);
+                } else if (nextSquare.start) {
+                    this.squaresToAnimate.push([nextSquare, "startVisited"]);
                 } else {
-                    this.squaresToAnimate.push([this.boardL[y][x], "visited"]);
+                    this.squaresToAnimate.push([nextSquare, "visited"]);
                 }
             } else {
-                if (this.boardL[y][x].weight) {
-                    this.boardL[y][x].div.className = "weightVisited";
+                if (nextSquare.weight) {
+                    nextSquare.div.className = "weightVisited";
+                } else if (nextSquare.target) {
+                    nextSquare.div.className = "targetVisited";
+                } else if (nextSquare.start) {
+                    nextSquare.div.className = "startVisited";
                 } else {
-                    this.boardL[y][x].div.className = "visited";
+                    nextSquare.div.className = "visited";
                 }
             }
         }
         this.boardL[y][x].visited = true;
     }
-    backtrace(target, animating) {
+    backtrace(animating) {
         // This function backtraces from the target square to the start square and
         // highlights every square along the path.
         // Parameters:
-        // target - a square object
         // animating - a boolean (true or false) representing wethter the visited nodes
         // should be animated or not.
         // Output: None.
 
-        let currentSquare = target.previous;
+        let currentSquare = this.target;
+        let backtracing = true;
 
-        while (!currentSquare.start) {
+        while (backtracing) {
             if (animating) {
                 if (currentSquare.weight) {
                     this.squaresToAnimate.push([currentSquare, "weightPath"]);
+                } else if (currentSquare.target) {
+                    this.squaresToAnimate.push([currentSquare, "targetPath"]);
+                } else if (currentSquare.start) {
+                    this.squaresToAnimate.push([currentSquare, "startPath"]);
+                    backtracing = false;
                 } else {
                     this.squaresToAnimate.push([currentSquare, "path"]);
                 }
             } else {
                 if (currentSquare.weight) {
                     currentSquare.div.className = "weightPath";
+                } else if (currentSquare.target) {
+                    currentSquare.div.className = "targetPath";
+                } else if (currentSquare.start) {
+                    currentSquare.div.className = "startPath";
+                    backtracing = false;
                 } else {
                     currentSquare.div.className = "path";
                 }
