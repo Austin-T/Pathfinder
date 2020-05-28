@@ -87,7 +87,6 @@ class Pathfinder {
                     weight: false,
                     visited: false,
                     previous: null,
-                    next: null,
                     distance: Infinity,
                     heuristic: Infinity
                 }
@@ -767,7 +766,6 @@ class Pathfinder {
         // stack - an array representing a stack
         // Output: None.
 
-        // stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
         this.visitSquare(square);
@@ -781,7 +779,6 @@ class Pathfinder {
         // stack - an array representing a queue.
         // Output: None.
 
-        // lastSquare.next = nextSquare;
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
         this.visitSquare(nextSquare);
@@ -1036,7 +1033,9 @@ class Pathfinder {
         // This function returns true if there is currently an computation in progress
         // and false otherwise.
         // Parameters: None.
-        // Output: None.
+        // Output:
+        // true - when the program is currently computing a shortest-path or animating.
+        // false - when the pathfinder is at rest.
 
         return this.computing;
     }
@@ -1046,7 +1045,6 @@ class Pathfinder {
         // Parameters: None.
         // Output: None.
 
-        //debugger;
         for (let i = 0; i <= this.squaresToAnimate.length; i++) {
             setTimeout(() => {
                 // Animate every square in the squares to animate list
