@@ -117,6 +117,7 @@ class Pathfinder {
                 square.div.onmousedown = (e) => {
                     // A mouse down event has occured while the cursor is ontop of the given
                     // square
+                    if (this.computing) return;
                     e.preventDefault();
                     this.mousedown = true;
                     if (square.start) {
@@ -131,6 +132,7 @@ class Pathfinder {
                 square.div.onmouseenter = () => {
                     // The cursor has entered the given square and it may be either "mousedown"
                     // or "mouseup" as denoted by 'this.mousedown'
+                    if (this.computing) return;
                     if (this.mousedown && this.currentPressedSquare == "normal") {
                         this.changeNormalSquare(square);
                     } else if (this.mousedown) {
@@ -148,6 +150,7 @@ class Pathfinder {
                 square.div.onmouseup = () => {
                     // A mouse up event has occured while the cursor is ontop of the given
                     // square
+                    if (this.computing) return;
                     this.mousedown = false;
                     if (this.currentPressedSquare == "start") {
                         this.start = square;
@@ -526,8 +529,8 @@ class Pathfinder {
             case "A*Search":
                 this.aStarSearch(animating);
                 break;
-            case "Swarm":
-                this.depthFirstSearch(animating);
+            case "BestFirstSearch":
+                this.bestFirstSearch(animating);
                 break;
             case "BreadthFirstSearch":
                 this.breadthFirstSearch(animating);
@@ -923,10 +926,10 @@ class Pathfinder {
             let x = smallestFound.x;
 
             // Update the unvisited neighbors of the current square
-            this.aStarUpdate(smallestFound, x, y - 1, animating);
-            this.aStarUpdate(smallestFound, x - 1, y, animating);
-            this.aStarUpdate(smallestFound, x + 1, y, animating);
-            this.aStarUpdate(smallestFound, x, y + 1, animating);
+            this.aStarUpdate(smallestFound, x, y - 1);
+            this.aStarUpdate(smallestFound, x - 1, y);
+            this.aStarUpdate(smallestFound, x + 1, y);
+            this.aStarUpdate(smallestFound, x, y + 1);
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
@@ -935,7 +938,7 @@ class Pathfinder {
             }
         }
     }
-    aStarUpdate(previousSquare, x, y, animating) {
+    aStarUpdate(previousSquare, x, y) {
         // This function records the distance to the starting node of a square
         // wich neighbors 'previousSquare', if that distance is shorter than its previosuly
         // recorded distance. If the distance of the square is updated then its
@@ -960,6 +963,114 @@ class Pathfinder {
             if (previousSquare.distance + 1 < nextSquare.distance) {
                 nextSquare.distance = previousSquare.distance + 1;
                 nextSquare.previous = previousSquare;
+            }
+        }
+    }
+    bestFirstSearch(animating) {
+        // This function finds the shortest distance between a start node and a target
+        // node. The function is called exclusively as a subprocess of this.runSearch().
+        // We stop checking all the nodes when the target has been visited
+        // Parameters:
+        // animating - a boolean (true or false) representing wethter the visited nodes
+        // should be animated or not.
+        // Output: None.
+
+        // set the heuristic for each node in the board
+        for (let i = 0; i < this.height; i++) {
+            for (let j = 0; j < this.width; j++) {
+                this.boardL[i][j].visited = false;
+                if (this.boardL[i][j].weight) {
+                    this.boardL[i][j].heuristic = this.distanceToTarget(this.boardL[i][j]) + this.weightValue;
+                } else {
+                    this.boardL[i][j].heuristic = this.distanceToTarget(this.boardL[i][j]);
+                }
+            }
+        }
+
+        // Visit the starting square by default
+        this.start.visited = true;
+
+        // create a list of unvisited squares which are surrounding ones which have been visited already
+        let nextToVisit = [this.start];
+        // let x = this.start.x;
+        // let y = this.start.y;
+        // if (this.emptySquare(x, y - 1)) {
+        //     nextToVisit.push(this.boardL[y - 1][x]);
+        //     this.boardL[y - 1][x].previous = this.start;
+        // }
+        // if (this.emptySquare(x, y + 1)) {
+        //     nextToVisit.push(this.boardL[y + 1][x]);
+        //     this.boardL[y + 1][x].previous = this.start;
+        // }
+        // if (this.emptySquare(x - 1, y)) {
+        //     nextToVisit.push(this.boardL[y][x - 1]);
+        //     this.boardL[y][x - 1].previous = this.start;
+        // }
+        // if (this.emptySquare(x + 1, y)) {
+        //     nextToVisit.push(this.boardL[y][x + 1]);
+        //     this.boardL[y][x + 1].previous = this.start;
+        // }
+        
+        let targetFound = false;
+        while (!targetFound) {
+            // visit the square with the smallest heuristic value
+            let smallestFound = null;
+            let smallestValue = Infinity;
+            for (let i = 0; i < nextToVisit.length; i++) {
+                if (nextToVisit[i].heuristic < smallestValue) {
+                    smallestFound = nextToVisit[i];
+                    smallestValue = nextToVisit[i].heuristic;
+                }
+            }
+            smallestFound.visited = true;
+            nextToVisit.splice(nextToVisit.indexOf(smallestFound), 1);
+
+            // animate the most recently visited node, "smallestFound"
+            if (animating) {
+                if (smallestFound.weight) {
+                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
+                } else if (smallestFound.target) {
+                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
+                } else if (smallestFound.start) {
+                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
+                } else {
+                    this.squaresToAnimate.push([smallestFound, "visited"]);
+                }
+            } else {
+                if (smallestFound.weight) {
+                    smallestFound.div.className = "weightVisited";
+                } else if (smallestFound.target) {
+                    smallestFound.div.className = "targetVisited";
+                } else if (smallestFound.start) {
+                    smallestFound.div.className = "startVisited";
+                } else {
+                    smallestFound.div.className = "visited";
+                }
+            }
+
+            let x = smallestFound.x;
+            let y = smallestFound.y;
+            if (this.emptySquare(x, y - 1)) {
+                nextToVisit.push(this.boardL[y - 1][x]);
+                this.boardL[y - 1][x].previous = smallestFound;
+            }
+            if (this.emptySquare(x, y + 1)) {
+                nextToVisit.push(this.boardL[y + 1][x]);
+                this.boardL[y + 1][x].previous = smallestFound;
+            }
+            if (this.emptySquare(x - 1, y)) {
+                nextToVisit.push(this.boardL[y][x - 1]);
+                this.boardL[y][x - 1].previous = smallestFound;
+            }
+            if (this.emptySquare(x + 1, y)) {
+                nextToVisit.push(this.boardL[y][x + 1]);
+                this.boardL[y][x + 1].previous = smallestFound;
+            }
+
+            if (this.target.visited) {
+                // The target has been found (optimally in this case)
+                this.backtrace(animating);
+                targetFound = true;
             }
         }
     }
@@ -1064,7 +1175,7 @@ window.addEventListener('load', function() {
     
     const djikstras = "Djikstra's Algorithm is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
     const aStar = "A* Search is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
-    const swarm = "Swarm Algorithm is <strong>weighted</strong> and <strong>does not guaruntee</strong> the shortest path";
+    const bestFirst = "Best-First Search is <strong>weighted</strong> and <strong>does not guaruntee</strong> the shortest path";
     const breadthFirst = "Breadth-First Search is <strong>unweighted</strong> and <strong>guaruntees</strong> the shortest path";
     const depthFirst = "Depth-First Search is <strong>unweighted</strong> and <strong>does not guaruntee</strong> the shortest path";
 
@@ -1111,8 +1222,8 @@ window.addEventListener('load', function() {
                 case "A*Search":
                     infoText.innerHTML = aStar;
                     break;
-                case "Swarm":
-                    infoText.innerHTML = swarm;
+                case "BestFirstSearch":
+                    infoText.innerHTML = bestFirst;
                     break;
                 case "BreadthFirstSearch":
                     infoText.innerHTML = breadthFirst;

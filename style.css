@@ -3,7 +3,7 @@
     padding: 0;
     box-sizing: border-box;
 }
-header h1, header p {
+header h1, header h3, header p {
     color: white;
 }
 .app {
@@ -21,14 +21,26 @@ header {
     justify-content: space-around;
     background: rgba(0, 0, 40);
     width: 100%;
-    height: 25vh;
+    /* height: 25vh; */
+}
+.appName {
+    margin-top: 10px;
+    margin-left: 5px;
+    margin-bottom: 5px;
 }
 .allAlgorithms, .allPatterns, .allBoardFunctions {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
-    height: 60px;
     align-items: center;
+}
+.allAlgorithms, .allPatterns {
+    margin: 5px;
+    justify-content: space-between;
+}
+.allBoardFunctions {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    justify-content: space-around;
 }
 .algorithm, .pattern, .boardFunction{
     border-radius: 5px;
@@ -36,6 +48,13 @@ header {
 }
 .algorithm:hover, .pattern:hover, .boardFunction:hover {
     border: 1px solid white;
+    padding: 9px;
+    cursor: pointer;
+}
+.algorithm:active, .pattern:active, .boardFunction:active {
+    border: 1px solid white;
+    padding: 7px;
+    margin: 2px;
     cursor: pointer;
 }
 .boardFunction {
@@ -44,23 +63,24 @@ header {
 }
 .legend {
     width: 100%;
-    height: 6vh;
+    /* height: 6vh; */
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
+    padding: 10px;
 }
 .legend p{
     padding: 0 0 0 5px;
 }
 .algorithmInfo {
     width: 100%;
-    height: 6vh;
+    /* height: 6vh; */
     position: relative;
+    padding: 10px;
 }
 #infoText {
     text-align: center;
-    padding-top: 25px;
 }
 .board {
     border: 1px solid grey;
