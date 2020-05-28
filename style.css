@@ -555,3 +555,36 @@ header {
         background-size: contain;
     }
 }
+.boardFooter {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+footer {
+    /* height: 50px; */
+    width: 100%;
+    background: rgba(0, 0, 40);
+}
+.footerContent {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+}
+.metric {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px;
+}
+.metric p {
+    color: white;
+}
+#nodesVisited {
+    color: rgb(0, 153, 255);
+    padding-left: 4px;
+}
+#pathwayCost {
+    color: rgb(255, 254, 106);
+    padding-left: 4px;
+}

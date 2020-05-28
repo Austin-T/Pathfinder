@@ -1,5 +1,5 @@
 class Pathfinder {
-    constructor(height, width, boardDiv) {
+    constructor(height, width, boardDiv, nodesVisited, pathwayCost) {
         // This function creates an instance of the Pathfinder object.
         // Parameters:
         // height - an integer representing the amount of rows in the board.
@@ -9,6 +9,9 @@ class Pathfinder {
 
         this.height = height;   // the amount of row in the board
         this.width = width;     // the amount of columns in the board
+
+        this.nodesVisited = nodesVisited; // a div element where the number of nodes visited should be modified
+        this.pathwayCost = pathwayCost; // a div element where the pathway cost should be modified
 
         this.boardD = boardDiv; // a div element representing the board
         this.boardL = [];       // an array representing the board
@@ -268,6 +271,10 @@ class Pathfinder {
         // Parameters: None.
         // Output: None.
 
+        // reset the nodes-visited and pathway-cost
+        this.nodesVisited.innerHTML = "0";
+        this.pathwayCost.innerHTML = "0";
+
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
             // For each column in the board
@@ -298,6 +305,10 @@ class Pathfinder {
         // of a path so that the new "visited" and "path" squares can be displayed.
         // Parameters: None.
         // Output: None.
+
+        // reset the nodes-visited and pathway-cost
+        this.nodesVisited.innerHTML = "0";
+        this.pathwayCost.innerHTML = "0";
 
         // For each row in the board
         for (let i = 0; i < this.height; i++) {
@@ -381,13 +392,13 @@ class Pathfinder {
 
         if (this.animating) {
             if (square.weight) {
-                this.squaresToAnimate.push([square, "weightVisited"]);
+                this.squaresToAnimate.push([square, "weightVisited", "visit"]);
             } else if (square.target) {
-                this.squaresToAnimate.push([square, "targetVisited"]);
+                this.squaresToAnimate.push([square, "targetVisited", "visit"]);
             } else if (square.start) {
-                this.squaresToAnimate.push([square, "startVisited"]);
+                this.squaresToAnimate.push([square, "startVisited", "visit"]);
             } else {
-                this.squaresToAnimate.push([square, "visited"]);
+                this.squaresToAnimate.push([square, "visited", "visit"]);
             }
         } else {
             if (square.weight) {
@@ -399,6 +410,7 @@ class Pathfinder {
             } else {
                 square.div.className = "visited";
             }
+            this.nodesVisited.innerHTML = String(Number(this.nodesVisited.innerHTML) + 1);
         }
     }
     addToPath(square) {
@@ -413,17 +425,19 @@ class Pathfinder {
 
         if (this.animating) {
             if (square.weight) {
-                this.squaresToAnimate.push([square, "weightPath"]);
+                this.squaresToAnimate.push([square, "weightPath", "path"]);
             } else if (square.target) {
-                this.squaresToAnimate.push([square, "targetPath"]);
+                this.squaresToAnimate.push([square, "targetPath", "path"]);
             } else if (square.start) {
-                this.squaresToAnimate.push([square, "startPath"]);
+                this.squaresToAnimate.push([square, "startPath", "path"]);
             } else {
-                this.squaresToAnimate.push([square, "path"]);
+                this.squaresToAnimate.push([square, "path", "path"]);
             }
         } else {
+            let addToPath = 1;
             if (square.weight) {
                 square.div.className = "weightPath";
+                addToPath = this.weightValue;
             } else if (square.target) {
                 square.div.className = "targetPath";
             } else if (square.start) {
@@ -431,6 +445,7 @@ class Pathfinder {
             } else {
                 square.div.className = "path";
             }
+            this.pathwayCost.innerHTML = String(Number(this.pathwayCost.innerHTML) + addToPath);
         }
     }
     setPattern(pattern) {
@@ -661,6 +676,7 @@ class Pathfinder {
             } else if (stack[stack.length - 1].target) {
                 // we have reached the target
                 targetFound = true;
+                this.visitSquare(this.target);
                 // draw out the pathway
                 this.backtrace();
             }
@@ -680,7 +696,6 @@ class Pathfinder {
 
         while(!targetFound) {
             // Dequeue an element from the queue
-            console.log(queue == []);
             if (queue == []) {
                 // no pathway has been found
                 alert("No pathway was found");
@@ -696,6 +711,7 @@ class Pathfinder {
                 // The top square has not been visited
                 this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue);
                 if (this.boardL[y - 1][x].target) {
+                    this.visitSquare(this.target);
                     targetFound = true;
                     this.backtrace();
                     break;
@@ -705,6 +721,7 @@ class Pathfinder {
                 // The right square has not been visited
                 this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue);
                 if (this.boardL[y][x + 1].target) {
+                    this.visitSquare(this.target);
                     targetFound = true;
                     this.backtrace();
                     break;
@@ -714,6 +731,7 @@ class Pathfinder {
                 // The bottom square has not been visited
                 this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue);
                 if (this.boardL[y + 1][x].target) {
+                    this.visitSquare(this.target);
                     targetFound = true;
                     this.backtrace();
                     break;
@@ -723,6 +741,7 @@ class Pathfinder {
                 // The left square has not been visited
                 this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue);
                 if (this.boardL[y][x - 1].target) {
+                    this.visitSquare(this.target);
                     targetFound = true;
                     this.backtrace();
                     break;
@@ -828,6 +847,7 @@ class Pathfinder {
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
+                this.visitSquare(this.target);
                 this.backtrace();
                 targetFound = true;
             }
@@ -907,6 +927,7 @@ class Pathfinder {
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
+                this.visitSquare(this.target);
                 this.backtrace();
                 targetFound = true;
             }
@@ -1055,8 +1076,15 @@ class Pathfinder {
                     // is finished.
                     this.squaresToAnimate = [];
                     this.computing = false;
+                } else if (this.squaresToAnimate[i][2] == "visit") {
+                    this.squaresToAnimate[i][0].div.className = this.squaresToAnimate[i][1];
+                    this.nodesVisited.innerHTML = String(Number(this.nodesVisited.innerHTML) + 1);
+                } else if (this.squaresToAnimate[i][1] == "weightPath") {
+                    this.squaresToAnimate[i][0].div.className = this.squaresToAnimate[i][1];
+                    this.pathwayCost.innerHTML = String(Number(this.pathwayCost.innerHTML) + this.weightValue);
                 } else {
                     this.squaresToAnimate[i][0].div.className = this.squaresToAnimate[i][1];
+                    this.pathwayCost.innerHTML = String(Number(this.pathwayCost.innerHTML) + 1);
                 }
             }, this.delayTime * i);
         }
@@ -1068,7 +1096,10 @@ class Pathfinder {
 window.addEventListener('load', function() {
 
     // Create a Pathfinder Object
-    let pathfinder = new Pathfinder(21, 51, document.getElementById("board"));
+    const board = document.getElementById("board");
+    const nodesVisited = document.getElementById("nodesVisited");
+    const pathwayCost = document.getElementById("pathwayCost");
+    let pathfinder = new Pathfinder(21, 51, board, nodesVisited, pathwayCost);
 
     // Initialize the pathfinder
     pathfinder.initialize();
