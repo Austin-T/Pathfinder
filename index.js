@@ -35,6 +35,8 @@ class Pathfinder {
         this.delayTime = 20; // the amount of milliseconds between the animation of each node
 
         this.weightValue = 5; // The weighted cost of travelling through a weighted square on the grid
+
+        this.animating = false; // indecates wether nodes should be aniated in sequence or not at all
     }
     initialize() {
         // This function initializes the pithfinder object: a grid is created with
@@ -368,6 +370,70 @@ class Pathfinder {
             }
         }
     }
+    visitSquare(square) {
+        // this function "visits" a single square in the board by setting its
+        // visited attribute to true and change its className so that it displays
+        // properly on the board.
+        // Parameter:
+        // square - a square object
+        // Output: None.
+
+        square.visited = true;
+
+        if (this.animating) {
+            if (square.weight) {
+                this.squaresToAnimate.push([square, "weightVisited"]);
+            } else if (square.target) {
+                this.squaresToAnimate.push([square, "targetVisited"]);
+            } else if (square.start) {
+                this.squaresToAnimate.push([square, "startVisited"]);
+            } else {
+                this.squaresToAnimate.push([square, "visited"]);
+            }
+        } else {
+            if (square.weight) {
+                square.div.className = "weightVisited";
+            } else if (square.target) {
+                square.div.className = "targetVisited";
+            } else if (square.start) {
+                square.div.className = "startVisited";
+            } else {
+                square.div.className = "visited";
+            }
+        }
+    }
+    addToPath(square) {
+        // this function adds a single square in the board to the path by setting its
+        // path attribute to true and change its className so that it displays
+        // properly on the board.
+        // Parameter:
+        // square - a square object
+        // Output: None.
+
+        square.path = true;
+
+        if (this.animating) {
+            if (square.weight) {
+                this.squaresToAnimate.push([square, "weightPath"]);
+            } else if (square.target) {
+                this.squaresToAnimate.push([square, "targetPath"]);
+            } else if (square.start) {
+                this.squaresToAnimate.push([square, "startPath"]);
+            } else {
+                this.squaresToAnimate.push([square, "path"]);
+            }
+        } else {
+            if (square.weight) {
+                square.div.className = "weightPath";
+            } else if (square.target) {
+                square.div.className = "targetPath";
+            } else if (square.start) {
+                square.div.className = "startPath";
+            } else {
+                square.div.className = "path";
+            }
+        }
+    }
     setPattern(pattern) {
         // This function checks the name of the parameter 'pattern' and calls
         // The appropriate function to create a pattern on the board.
@@ -519,24 +585,25 @@ class Pathfinder {
         // should be animated or not.
         // Output: None.
 
+        this.animating = animating;
         this.computing = true;
         this.clearVisited();
 
         switch(this.algorithm) {
             case "Dijkstra":
-                this.dijkstrasAlgorithm(animating);
+                this.dijkstrasAlgorithm();
                 break;
             case "A*Search":
-                this.aStarSearch(animating);
+                this.aStarSearch();
                 break;
             case "BestFirstSearch":
-                this.bestFirstSearch(animating);
+                this.bestFirstSearch();
                 break;
             case "BreadthFirstSearch":
-                this.breadthFirstSearch(animating);
+                this.breadthFirstSearch();
                 break;
             case "DepthFirstSearch":
-                this.depthFirstSearch(animating);
+                this.depthFirstSearch();
                 break;
             default:
                 alert("Unable to run the selected search");
@@ -548,12 +615,10 @@ class Pathfinder {
             this.computing = false;
         }
     }
-    depthFirstSearch(animating) {
+    depthFirstSearch() {
         // This function runs a depth-first search from the start node to the target node.
         // The process is called as a subprocess of this.runSearch().
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         let x = this.start.x;
@@ -569,19 +634,19 @@ class Pathfinder {
             // select an unvisited square adjacent to the current square and push it to the stack
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
-                this.visitSquareDFS(this.boardL[y - 1][x], stack, animating);
+                this.visitSquareDFS(this.boardL[y - 1][x], stack);
                 y--;
             } else  if (this.emptySquare(x + 1, y )) {
                 // The right square has not been visited
-                this.visitSquareDFS(this.boardL[y][x + 1], stack, animating);
+                this.visitSquareDFS(this.boardL[y][x + 1], stack);
                 x++;
             } else  if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
-                this.visitSquareDFS(this.boardL[y + 1][x], stack, animating);
+                this.visitSquareDFS(this.boardL[y + 1][x], stack);
                 y++;
             } else  if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
-                this.visitSquareDFS(this.boardL[y][x - 1], stack, animating);
+                this.visitSquareDFS(this.boardL[y][x - 1], stack);
                 x--;
             } else {
                 // All possible squares have been visited. Pop one square from the stack
@@ -598,16 +663,14 @@ class Pathfinder {
                 // we have reached the target
                 targetFound = true;
                 // draw out the pathway
-                this.backtrace(animating);
+                this.backtrace();
             }
         }
     }
-    breadthFirstSearch(animating) {
+    breadthFirstSearch() {
         // This function runs a breadth-first search from the start node to the target node.
         // The process is called as a subprocess of this.runSearch().
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         this.start.visited = true;
@@ -632,37 +695,37 @@ class Pathfinder {
             // select an unvisited squares adjacent to the current square and enqueue them
             if (this.emptySquare(x, y - 1)) {
                 // The top square has not been visited
-                this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue, animating);
+                this.visitSquareBFS(dequeue, this.boardL[y - 1][x], queue);
                 if (this.boardL[y - 1][x].target) {
                     targetFound = true;
-                    this.backtrace(animating);
+                    this.backtrace();
                     break;
                 }
             }
             if (this.emptySquare(x + 1, y)) {
                 // The right square has not been visited
-                this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue, animating);
+                this.visitSquareBFS(dequeue, this.boardL[y][x + 1], queue);
                 if (this.boardL[y][x + 1].target) {
                     targetFound = true;
-                    this.backtrace(animating);
+                    this.backtrace();
                     break;
                 }
             }
             if (this.emptySquare(x, y + 1)) {
                 // The bottom square has not been visited
-                this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue, animating);
+                this.visitSquareBFS(dequeue, this.boardL[y + 1][x], queue);
                 if (this.boardL[y + 1][x].target) {
                     targetFound = true;
-                    this.backtrace(animating);
+                    this.backtrace();
                     break;
                 }
             }
             if (this.emptySquare(x - 1, y)) {
                 // The left square has not been visited
-                this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue, animating);
+                this.visitSquareBFS(dequeue, this.boardL[y][x - 1], queue);
                 if (this.boardL[y][x - 1].target) {
                     targetFound = true;
-                    this.backtrace(animating);
+                    this.backtrace();
                     break;
                 }
             }
@@ -681,7 +744,9 @@ class Pathfinder {
         // Parameters:
         // x - an integer representing the x coordinate of the desired square in the board.
         // y - an integer representing the y coordinate of the desired square in the board.
-        // Output: None.
+        // Output:
+        // true - when square is empty and unvisited
+        // false - when square is either occupied by a wall, visited, or out of bounds
 
         if (y < 0 || y >= this.height || x < 0 || x >= this.width) {
             // the index is out of range
@@ -694,79 +759,39 @@ class Pathfinder {
             return true;
         }
     }
-    visitSquareDFS(square, stack, animating){
+    visitSquareDFS(square, stack){
         // This function converts an unvisited square to a visited square for a depth
         // first search and adds it to the stack.
         // Parameters:
         // square - a square object
         // stack - an array representing a stack
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
         // Output: None.
 
-        stack[stack.length - 1].next = square;
+        // stack[stack.length - 1].next = square;
         square.previous = stack[stack.length - 1];
         stack.push(square);
-        square.visited = true;
-        if (animating) {
-            if (square.target) {
-                this.squaresToAnimate.push([square, "targetVisited"]);
-            } else if (square.start) {
-                this.squaresToAnimate.push([square, "startVisited"]);
-            } else {
-                this.squaresToAnimate.push([square, "visited"]);
-            }
-        } else {
-            if (square.target) {
-                square.div.className = "targetVisited";
-            } else if (square.start) {
-                square.div.className = "startVisited";
-            } else {
-                square.div.className = "visited";
-            }
-        }
+        this.visitSquare(square);
     }
-    visitSquareBFS(lastSquare, nextSquare, queue, animating){
+    visitSquareBFS(lastSquare, nextSquare, queue){
         // This function converts an unvisited square to a visited square for a depth
         // first search and adds it to the queue.
         // Parameters:
         // lastSquare - a square object thats just been removed from the queue.
         // nextSquare - an unvisited square object which is a neighbor of lastSquare.
         // stack - an array representing a queue.
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
         // Output: None.
 
-        lastSquare.next = nextSquare;
+        // lastSquare.next = nextSquare;
         nextSquare.previous = lastSquare;
         queue.push(nextSquare);
-        nextSquare.visited = true;
-        if (animating) {
-            if (nextSquare.target) {
-                this.squaresToAnimate.push([nextSquare, "targetVisited"]);
-            } else if (nextSquare.start) {
-                this.squaresToAnimate.push([nextSquare, "startVisited"]);
-            } else {
-                this.squaresToAnimate.push([nextSquare, "visited"]);
-            }
-        } else {
-            if (nextSquare.target) {
-                nextSquare.div.className = "targetVisited";
-            } else if (nextSquare.start) {
-                nextSquare.div.className = "startVisited";
-            } else {
-                nextSquare.div.className = "visited";
-            }
-        }
+        this.visitSquare(nextSquare);
     }
-    dijkstrasAlgorithm(animating) {
+    dijkstrasAlgorithm() {
         // This function finds the shortest distance between a start node and a target
         // node. The function is called exclusively as a subprocess of this.runSearch().
         // We stop checking all the nodes when each empty node surrounding the target has
         // been visited
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         // let the distance of all squares from the start be infinity
@@ -793,48 +818,25 @@ class Pathfinder {
                     }
                 }
             }
-            smallestFound.visited = true;
-
-            // animate the most recently visited node, "smallestFound"
-            if (animating) {
-                if (smallestFound.weight) {
-                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
-                } else if (smallestFound.target) {
-                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
-                } else if (smallestFound.start) {
-                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
-                } else {
-                    this.squaresToAnimate.push([smallestFound, "visited"]);
-                }
-            } else {
-                if (smallestFound.weight) {
-                    smallestFound.div.className = "weightVisited";
-                } else if (smallestFound.target) {
-                    smallestFound.div.className = "targetVisited";
-                } else if (smallestFound.start) {
-                    smallestFound.div.className = "startVisited";
-                } else {
-                    smallestFound.div.className = "visited";
-                }
-            }
+            this.visitSquare(smallestFound);
 
             let y = smallestFound.y;
             let x = smallestFound.x;
 
             // Update the unvisited neighbors of the current square
-            this.dijkstraUpdate(smallestFound, x, y - 1, animating);
-            this.dijkstraUpdate(smallestFound, x - 1, y, animating);
-            this.dijkstraUpdate(smallestFound, x + 1, y, animating);
-            this.dijkstraUpdate(smallestFound, x, y + 1, animating);
+            this.dijkstraUpdate(smallestFound, x, y - 1);
+            this.dijkstraUpdate(smallestFound, x - 1, y);
+            this.dijkstraUpdate(smallestFound, x + 1, y);
+            this.dijkstraUpdate(smallestFound, x, y + 1);
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
-                this.backtrace(animating);
+                this.backtrace();
                 targetFound = true;
             }
         }
     }
-    dijkstraUpdate(previousSquare, x, y, animating) {
+    dijkstraUpdate(previousSquare, x, y) {
         // This function records the distance to the starting node of a square
         // wich neighbors 'previousSquare, if that distance is shorter than its previosuly
         // recorded distance. If the distance of the square is updated then its
@@ -862,14 +864,12 @@ class Pathfinder {
             }
         }
     }
-    aStarSearch(animating) {
+    aStarSearch() {
         // This function finds the shortest distance between a start node and a target
         // node. The function is called exclusively as a subprocess of this.runSearch().
         // We stop checking all the nodes when each empty node surrounding the target has
         // been visited.
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         // let the distance of all squares from the start be infinity
@@ -897,30 +897,7 @@ class Pathfinder {
                     }
                 }
             }
-            smallestFound.visited = true;
-
-            // animate the most recently visited node, "smallestFound"
-            if (animating) {
-                if (smallestFound.weight) {
-                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
-                } else if (smallestFound.target) {
-                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
-                } else if (smallestFound.start) {
-                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
-                } else {
-                    this.squaresToAnimate.push([smallestFound, "visited"]);
-                }
-            } else {
-                if (smallestFound.weight) {
-                    smallestFound.div.className = "weightVisited";
-                } else if (smallestFound.target) {
-                    smallestFound.div.className = "targetVisited";
-                } else if (smallestFound.start) {
-                    smallestFound.div.className = "startVisited";
-                } else {
-                    smallestFound.div.className = "visited";
-                }
-            }
+            this.visitSquare(smallestFound);
 
             let y = smallestFound.y;
             let x = smallestFound.x;
@@ -933,7 +910,7 @@ class Pathfinder {
 
             if (this.target.distance != Infinity) {
                 // The target has been found (optimally in this case)
-                this.backtrace(animating);
+                this.backtrace();
                 targetFound = true;
             }
         }
@@ -966,13 +943,11 @@ class Pathfinder {
             }
         }
     }
-    bestFirstSearch(animating) {
+    bestFirstSearch() {
         // This function finds the shortest distance between a start node and a target
         // node. The function is called exclusively as a subprocess of this.runSearch().
         // We stop checking all the nodes when the target has been visited
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         // set the heuristic for each node in the board
@@ -987,29 +962,8 @@ class Pathfinder {
             }
         }
 
-        // Visit the starting square by default
-        this.start.visited = true;
-
         // create a list of unvisited squares which are surrounding ones which have been visited already
         let nextToVisit = [this.start];
-        // let x = this.start.x;
-        // let y = this.start.y;
-        // if (this.emptySquare(x, y - 1)) {
-        //     nextToVisit.push(this.boardL[y - 1][x]);
-        //     this.boardL[y - 1][x].previous = this.start;
-        // }
-        // if (this.emptySquare(x, y + 1)) {
-        //     nextToVisit.push(this.boardL[y + 1][x]);
-        //     this.boardL[y + 1][x].previous = this.start;
-        // }
-        // if (this.emptySquare(x - 1, y)) {
-        //     nextToVisit.push(this.boardL[y][x - 1]);
-        //     this.boardL[y][x - 1].previous = this.start;
-        // }
-        // if (this.emptySquare(x + 1, y)) {
-        //     nextToVisit.push(this.boardL[y][x + 1]);
-        //     this.boardL[y][x + 1].previous = this.start;
-        // }
         
         let targetFound = false;
         while (!targetFound) {
@@ -1022,31 +976,9 @@ class Pathfinder {
                     smallestValue = nextToVisit[i].heuristic;
                 }
             }
-            smallestFound.visited = true;
-            nextToVisit.splice(nextToVisit.indexOf(smallestFound), 1);
 
-            // animate the most recently visited node, "smallestFound"
-            if (animating) {
-                if (smallestFound.weight) {
-                    this.squaresToAnimate.push([smallestFound, "weightVisited"]);
-                } else if (smallestFound.target) {
-                    this.squaresToAnimate.push([smallestFound, "targetVisited"]);
-                } else if (smallestFound.start) {
-                    this.squaresToAnimate.push([smallestFound, "startVisited"]);
-                } else {
-                    this.squaresToAnimate.push([smallestFound, "visited"]);
-                }
-            } else {
-                if (smallestFound.weight) {
-                    smallestFound.div.className = "weightVisited";
-                } else if (smallestFound.target) {
-                    smallestFound.div.className = "targetVisited";
-                } else if (smallestFound.start) {
-                    smallestFound.div.className = "startVisited";
-                } else {
-                    smallestFound.div.className = "visited";
-                }
-            }
+            this.visitSquare(smallestFound);
+            nextToVisit.splice(nextToVisit.indexOf(smallestFound), 1);
 
             let x = smallestFound.x;
             let y = smallestFound.y;
@@ -1069,7 +1001,7 @@ class Pathfinder {
 
             if (this.target.visited) {
                 // The target has been found (optimally in this case)
-                this.backtrace(animating);
+                this.backtrace();
                 targetFound = true;
             }
         }
@@ -1086,42 +1018,17 @@ class Pathfinder {
         let totalDistance = Math.abs(square.x - this.target.x) + Math.abs(square.y - this.target.y);
         return totalDistance;
     }
-    backtrace(animating) {
+    backtrace() {
         // This function backtraces from the target square to the start square and
         // highlights every square along the path.
-        // Parameters:
-        // animating - a boolean (true or false) representing wethter the visited nodes
-        // should be animated or not.
+        // Parameters: None.
         // Output: None.
 
         let currentSquare = this.target;
-        let backtracing = true;
 
-        while (backtracing) {
-            if (animating) {
-                if (currentSquare.weight) {
-                    this.squaresToAnimate.push([currentSquare, "weightPath"]);
-                } else if (currentSquare.target) {
-                    this.squaresToAnimate.push([currentSquare, "targetPath"]);
-                } else if (currentSquare.start) {
-                    this.squaresToAnimate.push([currentSquare, "startPath"]);
-                    backtracing = false;
-                } else {
-                    this.squaresToAnimate.push([currentSquare, "path"]);
-                }
-            } else {
-                if (currentSquare.weight) {
-                    currentSquare.div.className = "weightPath";
-                } else if (currentSquare.target) {
-                    currentSquare.div.className = "targetPath";
-                } else if (currentSquare.start) {
-                    currentSquare.div.className = "startPath";
-                    backtracing = false;
-                } else {
-                    currentSquare.div.className = "path";
-                }
-            }
-            currentSquare.path = true;
+        while (true) {
+            this.addToPath(currentSquare);
+            if (currentSquare.start) break;
             currentSquare = currentSquare.previous;
         }
     }
