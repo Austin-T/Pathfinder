@@ -662,23 +662,21 @@ class Pathfinder {
                 // The left square has not been visited
                 this.visitSquareDFS(this.boardL[y][x - 1], stack);
                 x--;
-            } else {
-                // All possible squares have been visited. Pop one square from the stack
-                stack.pop();
-                x = stack[stack.length - 1].x;
-                y = stack[stack.length - 1].y;
-            }
-
-            if (stack == []) {
-                // no pathway has been found
-                alert("No pathway was found");
-                targetFound = true;
             } else if (stack[stack.length - 1].target) {
                 // we have reached the target
                 targetFound = true;
                 this.visitSquare(this.target);
                 // draw out the pathway
                 this.backtrace();
+            } else if (stack.length == 1) {
+                // no pathway has been found
+                this.pathwayCost.innerHTML  = "No Path Found";
+                targetFound = true;
+            } else {
+                // All possible squares have been visited. Pop one square from the stack
+                stack.pop();
+                x = stack[stack.length - 1].x;
+                y = stack[stack.length - 1].y;
             }
         }
     }
@@ -696,9 +694,9 @@ class Pathfinder {
 
         while(!targetFound) {
             // Dequeue an element from the queue
-            if (queue == []) {
+            if (queue.length == 0) {
                 // no pathway has been found
-                alert("No pathway was found");
+                this.pathwayCost.innerHTML = "No Path Found";
                 targetFound = true;
                 break;
             }
@@ -748,9 +746,9 @@ class Pathfinder {
                 }
             }
 
-            if (queue == []) {
+            if (queue.length == 0) {
                 // no pathway has been found
-                alert("No pathway was found");
+                this.pathwayCost.innerHTML  = "No Path Found";
                 targetFound = true;
             }
         }
