@@ -588,3 +588,117 @@ footer {
     color: rgb(255, 254, 106);
     padding-left: 4px;
 }
+
+/* Tutorial Popup */
+.modal {
+    background-color: rgba(39, 43, 42, 0.75);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    z-index: 1;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.modal-hidden {
+    display: none;
+}
+
+.modalContent {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    position: fixed;
+    top: 10vh;
+    left: 20vw;
+    /* height: 800px; */
+    width: 60vw;
+    /* border: 1px solid green; */
+    z-index: 1;
+}
+
+.modalTop {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    /* color: white; */
+}
+
+.exitButton:hover {
+    cursor: pointer;
+}
+
+.modalTitle {
+    width: 100%;
+    align-content: center;
+    height: 60px;
+    /* border: 1px solid red; */
+    padding-top: 0.5em;
+    text-align: center;
+}
+
+.modalImage {
+    width: 100%;
+    height: 300px;
+    text-align: center
+    /* border: 1px solid red; */
+}
+
+.modalImage > img {
+    height: 100%;
+    width: 80%;
+    padding: 0 0.5em 0 0.5em;
+}
+
+.modalText {
+    width: 100%;
+    align-content: center;
+    height: 100px;
+    /* border: 1px solid red; */
+    padding: 1em 0.5em 0.5em 0.5em;
+    text-align: center;
+    /* color: white; */
+}
+
+.modalButtons {
+    width: 100%;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    /* border: 1px solid red; */
+
+}
+.smallButton {
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid grey;
+    background: rgb(0, 153, 255);
+}
+.smallButton:hover {
+    cursor: pointer;
+}
+.smallButton:active {
+    padding: 7px;
+    margin: 2px;
+    background: rgb(0, 153, 255);
+}
+.smallDeadButton {
+    border-radius: 5px;
+    padding: 10px;
+    border: 1px solid grey;
+}
+
+
+@media screen and (max-width: 960px) {
+
+    .modalContent {
+        width: 90vw;
+        left: 5vw;
+    }
+}
