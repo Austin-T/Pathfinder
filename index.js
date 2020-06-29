@@ -1107,11 +1107,11 @@ window.addEventListener('load', function() {
         lightBlue: "rgba(0, 153, 255)"
     };
     
-    const djikstras = "Djikstra's Algorithm is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
-    const aStar = "A* Search is <strong>weighted</strong> and <strong>guaruntees</strong> the shortest path";
-    const bestFirst = "Best-First Search is <strong>weighted</strong> and <strong>does not guaruntee</strong> the shortest path";
-    const breadthFirst = "Breadth-First Search is <strong>unweighted</strong> and <strong>guaruntees</strong> the shortest path";
-    const depthFirst = "Depth-First Search is <strong>unweighted</strong> and <strong>does not guaruntee</strong> the shortest path";
+    const djikstras = "Djikstra's Algorithm is <strong>weighted</strong> and <strong>guarantees</strong> the shortest path";
+    const aStar = "A* Search is <strong>weighted</strong> and <strong>guarantees</strong> the shortest path";
+    const bestFirst = "Best-First Search is <strong>weighted</strong> and <strong>does not guarantee</strong> the shortest path";
+    const breadthFirst = "Breadth-First Search is <strong>unweighted</strong> and <strong>guarantees</strong> the shortest path";
+    const depthFirst = "Depth-First Search is <strong>unweighted</strong> and <strong>does not guarantee</strong> the shortest path";
 
     // The following section of code is resposible for managing the selection of an algorithm and pattern
     // by the user. The code also is responsible for clearing the board and running the search.
